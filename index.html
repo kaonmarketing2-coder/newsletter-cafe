@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>나만 알고 싶은 카페 추천</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600&family=Pretendard:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #F7F3EE;
+    --espresso: #2C1A0E;
+    --latte: #C4956A;
+    --mocha: #7A4F2D;
+    --foam: #EDE8E1;
+    --steam: #D6CFC5;
+    --accent: #B87333;
+    --text: #2C1A0E;
+    --text-sub: #7A6555;
+    --card: #FDFAF7;
+    --border: rgba(122,79,45,0.15);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--cream);
+    color: var(--text);
+    font-family: 'Pretendard', sans-serif;
+    font-weight: 400;
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* Grain texture */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.6;
+  }
+
+  /* Decorative coffee ring */
+  body::after {
+    content: '';
+    position: fixed;
+    top: -120px;
+    right: -120px;
+    width: 400px;
+    height: 400px;
+    border-radius: 50%;
+    border: 40px solid rgba(196,149,106,0.08);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 60px 24px 80px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    margin-bottom: 52px;
+    opacity: 0;
+    animation: fadeUp 0.8s ease forwards;
+  }
+
+  .header-tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--latte);
+    border: 1px solid rgba(196,149,106,0.4);
+    padding: 5px 16px;
+    border-radius: 20px;
+    margin-bottom: 20px;
+  }
+
+  .header h1 {
+    font-family: 'Noto Serif KR', serif;
+    font-size: clamp(26px, 5vw, 36px);
+    font-weight: 600;
+    line-height: 1.35;
+    color: var(--espresso);
+    margin-bottom: 16px;
+  }
+
+  .header h1 em {
+    font-style: normal;
+    color: var(--accent);
+    border-bottom: 2px solid var(--latte);
+  }
+
+  .header p {
+    font-size: 14.5px;
+    color: var(--text-sub);
+    line-height: 1.8;
+  }
+
+  .deadline-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: var(--espresso);
+    color: var(--cream);
+    font-size: 13px;
+    font-weight: 500;
+    padding: 8px 18px;
+    border-radius: 24px;
+    margin-top: 20px;
+  }
+
+  .deadline-badge .dot {
+    width: 6px; height: 6px;
+    background: var(--latte);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+
+  /* Sections */
+  .section {
+    margin-bottom: 36px;
+    opacity: 0;
+    animation: fadeUp 0.8s ease forwards;
+  }
+
+  .section:nth-child(2) { animation-delay: 0.1s; }
+  .section:nth-child(3) { animation-delay: 0.2s; }
+  .section:nth-child(4) { animation-delay: 0.3s; }
+  .section:nth-child(5) { animation-delay: 0.4s; }
+  .section:nth-child(6) { animation-delay: 0.5s; }
+
+  .section-title {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--latte);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* Cards */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 12px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .card:focus-within {
+    border-color: rgba(196,149,106,0.5);
+    box-shadow: 0 4px 20px rgba(196,149,106,0.1);
+  }
+
+  .card-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  @media (max-width: 500px) {
+    .card-grid { grid-template-columns: 1fr; }
+  }
+
+  label {
+    display: block;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--espresso);
+    margin-bottom: 10px;
+    line-height: 1.5;
+  }
+
+  label .req {
+    color: var(--accent);
+    margin-left: 3px;
+  }
+
+  label .hint {
+    display: block;
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--text-sub);
+    margin-top: 3px;
+  }
+
+  input[type="text"],
+  input[type="tel"],
+  textarea,
+  select {
+    width: 100%;
+    background: var(--foam);
+    border: 1px solid var(--steam);
+    border-radius: 10px;
+    padding: 11px 14px;
+    font-size: 14px;
+    font-family: 'Pretendard', sans-serif;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s, background 0.2s;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  input[type="text"]:focus,
+  input[type="tel"]:focus,
+  textarea:focus,
+  select:focus {
+    border-color: var(--latte);
+    background: #fff;
+  }
+
+  input::placeholder, textarea::placeholder { color: var(--steam); font-size: 13px; }
+
+  textarea { resize: none; height: 96px; line-height: 1.7; }
+
+  /* Radio & Checkbox */
+  .radio-group, .check-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .radio-group.inline, .check-group.inline {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .radio-item, .check-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--text-sub);
+    padding: 9px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--steam);
+    background: var(--foam);
+    transition: all 0.15s;
+    user-select: none;
+  }
+
+  .radio-group.inline .radio-item,
+  .check-group.inline .check-item {
+    flex: 0 0 auto;
+  }
+
+  .radio-item:hover, .check-item:hover {
+    border-color: var(--latte);
+    color: var(--espresso);
+  }
+
+  .radio-item input, .check-item input {
+    width: auto;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+
+  .radio-item:has(input:checked),
+  .check-item:has(input:checked) {
+    background: rgba(196,149,106,0.12);
+    border-color: var(--latte);
+    color: var(--espresso);
+    font-weight: 500;
+  }
+
+  /* Prize banner */
+  .prize-banner {
+    background: var(--espresso);
+    color: var(--cream);
+    border-radius: 16px;
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 36px;
+  }
+
+  .prize-icon {
+    font-size: 28px;
+    flex-shrink: 0;
+  }
+
+  .prize-banner h3 {
+    font-size: 13px;
+    font-weight: 400;
+    color: rgba(247,243,238,0.6);
+    margin-bottom: 3px;
+  }
+
+  .prize-banner p {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--latte);
+  }
+
+  /* Photo note */
+  .photo-note {
+    background: rgba(196,149,106,0.08);
+    border: 1px dashed rgba(196,149,106,0.4);
+    border-radius: 12px;
+    padding: 16px 18px;
+    margin-top: 12px;
+    font-size: 13px;
+    color: var(--text-sub);
+    line-height: 1.7;
+  }
+
+  .photo-note strong {
+    color: var(--mocha);
+  }
+
+  /* Submit */
+  .submit-wrap {
+    text-align: center;
+    margin-top: 48px;
+    opacity: 0;
+    animation: fadeUp 0.8s ease 0.6s forwards;
+  }
+
+  .submit-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--espresso);
+    color: var(--cream);
+    border: none;
+    border-radius: 50px;
+    padding: 16px 40px;
+    font-size: 15px;
+    font-weight: 600;
+    font-family: 'Pretendard', sans-serif;
+    cursor: pointer;
+    letter-spacing: 0.03em;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .submit-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--latte);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .submit-btn:hover::before { opacity: 1; }
+  .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(44,26,14,0.25); }
+  .submit-btn:active { transform: translateY(0); }
+  .submit-btn span { position: relative; z-index: 1; }
+
+  .submit-sub {
+    font-size: 12.5px;
+    color: var(--text-sub);
+    margin-top: 14px;
+    line-height: 1.7;
+  }
+
+  /* Success overlay */
+  .success-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(44,26,14,0.6);
+    backdrop-filter: blur(6px);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  .success-overlay.show { display: flex; }
+
+  .success-card {
+    background: var(--card);
+    border-radius: 24px;
+    padding: 48px 40px;
+    text-align: center;
+    max-width: 400px;
+    width: 100%;
+    animation: scaleIn 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards;
+  }
+
+  .success-icon {
+    font-size: 52px;
+    display: block;
+    margin-bottom: 20px;
+  }
+
+  .success-card h2 {
+    font-family: 'Noto Serif KR', serif;
+    font-size: 22px;
+    color: var(--espresso);
+    margin-bottom: 12px;
+  }
+
+  .success-card p {
+    font-size: 14px;
+    color: var(--text-sub);
+    line-height: 1.8;
+  }
+
+  /* Validation */
+  .field-error {
+    font-size: 12px;
+    color: #C0392B;
+    margin-top: 6px;
+    display: none;
+  }
+
+  .has-error input,
+  .has-error textarea {
+    border-color: #E74C3C;
+  }
+
+  .has-error .field-error { display: block; }
+
+  /* Animations */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes scaleIn {
+    from { opacity: 0; transform: scale(0.85); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* Footer */
+  .footer {
+    text-align: center;
+    margin-top: 60px;
+    font-size: 12px;
+    color: var(--steam);
+  }
+
+  /* Loading state */
+  .submit-btn.loading .submit-label { opacity: 0; }
+  .submit-btn.loading::after {
+    content: '';
+    position: absolute;
+    width: 18px; height: 18px;
+    border: 2px solid rgba(247,243,238,0.3);
+    border-top-color: var(--cream);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-tag">☕ 사내 뉴스레터 응모</div>
+    <h1>나만 알고 싶은<br><em>카페</em>를 소개해주세요</h1>
+    <p>사옥 근처에서 즐겨 찾는 나만의 단골 카페가 있나요?<br>이번 뉴스레터에서 여러분의 숨은 보석 같은 카페를 소개합니다.</p>
+    <div class="deadline-badge">
+      <span class="dot"></span>
+      응모 마감 · 3월 20일 (금)
+    </div>
+  </div>
+
+  <!-- Prize -->
+  <div class="prize-banner" style="animation: fadeUp 0.8s ease 0.05s both;">
+    <div class="prize-icon">🎁</div>
+    <div>
+      <h3>선정 혜택</h3>
+      <p>스타벅스 1만원 상품권 증정</p>
+    </div>
+  </div>
+
+  <form id="survey-form" novalidate>
+
+    <!-- 기본 정보 -->
+    <div class="section">
+      <div class="section-title">기본 정보</div>
+      <div class="card-grid">
+        <div class="card" id="wrap-name">
+          <label for="name">이름 <span class="req">*</span></label>
+          <input type="text" id="name" name="name" placeholder="홍길동" maxlength="20">
+          <div class="field-error">이름을 입력해주세요.</div>
+        </div>
+        <div class="card" id="wrap-dept">
+          <label for="dept">부서 <span class="req">*</span></label>
+          <input type="text" id="dept" name="dept" placeholder="예) 마케팅팀" maxlength="30">
+          <div class="field-error">부서를 입력해주세요.</div>
+        </div>
+      </div>
+      <div class="card" id="wrap-phone">
+        <label for="phone">연락처 <span class="req">*</span>
+          <span class="hint">경품 수령을 위해 사용되며, 외부에 공개되지 않습니다.</span>
+        </label>
+        <input type="tel" id="phone" name="phone" placeholder="010-0000-0000" maxlength="13">
+        <div class="field-error">010-####-#### 형태로 입력해주세요.</div>
+      </div>
+    </div>
+
+    <!-- 카페 정보 -->
+    <div class="section">
+      <div class="section-title">카페 정보</div>
+      <div class="card" id="wrap-cafe-name">
+        <label for="cafe-name">카페 이름 <span class="req">*</span></label>
+        <input type="text" id="cafe-name" name="cafe-name" placeholder="예) 카페 달빛" maxlength="50">
+        <div class="field-error">카페 이름을 입력해주세요.</div>
+      </div>
+      <div class="card" id="wrap-location">
+        <label for="location">위치 <span class="req">*</span>
+          <span class="hint">주소 또는 지역명, 사옥에서 도보 소요 시간도 함께 알려주세요!</span>
+        </label>
+        <input type="text" id="location" name="location" placeholder="예) 강남구 테헤란로 OO, 도보 약 5분" maxlength="100">
+        <div class="field-error">위치를 입력해주세요.</div>
+      </div>
+      <div class="card" id="wrap-menu">
+        <label for="menu">추천 메뉴 <span class="req">*</span>
+          <span class="hint">시그니처 메뉴를 가격과 함께 알려주세요.</span>
+        </label>
+        <input type="text" id="menu" name="menu" placeholder="예) 흑임자 라떼 6,500원" maxlength="100">
+        <div class="field-error">추천 메뉴를 입력해주세요.</div>
+      </div>
+    </div>
+
+    <!-- 추천 이유 -->
+    <div class="section">
+      <div class="section-title">추천 이유</div>
+      <div class="card" id="wrap-story">
+        <label for="story">이 카페를 처음 알게 된 계기 <span class="req">*</span></label>
+        <textarea id="story" name="story" placeholder="자유롭게 작성해 주세요 :)"></textarea>
+        <div class="field-error">내용을 입력해주세요.</div>
+      </div>
+      <div class="card" id="wrap-reason">
+        <label for="reason">'나만 알고 싶다'고 느낀 이유 <span class="req">*</span>
+          <span class="hint">분위기, 맛, 사장님, 숨은 공간 등 어떤 이유든 좋아요!</span>
+        </label>
+        <textarea id="reason" name="reason" placeholder="자유롭게 작성해 주세요 :)"></textarea>
+        <div class="field-error">내용을 입력해주세요.</div>
+      </div>
+    </div>
+
+    <!-- 방문 TIP -->
+    <div class="section">
+      <div class="section-title">방문 TIP</div>
+      <div class="card">
+        <label>가장 좋은 방문 타이밍 <span class="req">*</span>
+          <span class="hint">해당하는 것을 모두 선택해 주세요.</span>
+        </label>
+        <div class="check-group inline" id="timing-group">
+          <label class="check-item"><input type="checkbox" name="timing" value="출근 전 (오전)"> <span>출근 전 (오전)</span></label>
+          <label class="check-item"><input type="checkbox" name="timing" value="점심시간"> <span>점심시간</span></label>
+          <label class="check-item"><input type="checkbox" name="timing" value="오후 커피타임"> <span>오후 커피타임</span></label>
+          <label class="check-item"><input type="checkbox" name="timing" value="퇴근 후"> <span>퇴근 후</span></label>
+          <label class="check-item"><input type="checkbox" name="timing" value="주말"> <span>주말</span></label>
+        </div>
+        <div class="field-error" id="timing-error">방문 타이밍을 하나 이상 선택해주세요.</div>
+      </div>
+      <div class="card">
+        <label>분위기 <span class="req">*</span></label>
+        <div class="radio-group inline" id="vibe-group">
+          <label class="radio-item"><input type="radio" name="vibe" value="혼자 조용히 있기 좋아요"> <span>혼자 조용히</span></label>
+          <label class="radio-item"><input type="radio" name="vibe" value="동료와 함께 가기 좋아요"> <span>동료와 함께</span></label>
+          <label class="radio-item"><input type="radio" name="vibe" value="둘 다 괜찮아요"> <span>둘 다 괜찮아요</span></label>
+        </div>
+        <div class="field-error" id="vibe-error">분위기를 선택해주세요.</div>
+      </div>
+      <div class="card">
+        <label for="caution">주의사항
+          <span class="hint">웨이팅, 현금 전용, 노트북 사용 불가 등 (해당 없으면 비워두세요)</span>
+        </label>
+        <input type="text" id="caution" name="caution" placeholder="예) 주말엔 웨이팅 있음, 현금만 가능" maxlength="100">
+      </div>
+    </div>
+
+    <!-- 한 줄 추천사 -->
+    <div class="section">
+      <div class="section-title">한 줄 추천사</div>
+      <div class="card" id="wrap-tagline">
+        <label for="tagline">이 카페를 한 문장으로 소개한다면? <span class="req">*</span>
+          <span class="hint">뉴스레터에 그대로 실릴 수 있어요. 솔직하고 개성 있게!</span>
+        </label>
+        <input type="text" id="tagline" name="tagline" placeholder="예) 아는 사람만 찾아오는, 골목 안 작은 보물 같은 카페" maxlength="80">
+        <div class="field-error">한 줄 추천사를 입력해주세요.</div>
+      </div>
+
+      <div class="photo-note">
+        📸 <strong>카페 사진</strong>도 보내주시면 뉴스레터가 더욱 풍성해져요!<br>
+        직접 찍은 사진 1~2장을 담당자 이메일(<strong>[담당자 이메일]</strong>)로 보내주세요.
+      </div>
+    </div>
+
+    <!-- Submit -->
+    <div class="submit-wrap">
+      <button type="submit" class="submit-btn" id="submit-btn">
+        <span class="submit-label">응모하기 ✦</span>
+      </button>
+      <p class="submit-sub">
+        입력하신 개인정보는 경품 발송 목적으로만 사용되며<br>뉴스레터 발행 후 즉시 파기됩니다.
+      </p>
+    </div>
+
+  </form>
+
+  <div class="footer">
+    ☕ 사내 뉴스레터 — 나만 알고 싶은 맛집 시리즈
+  </div>
+
+</div>
+
+<!-- Success Overlay -->
+<div class="success-overlay" id="success-overlay">
+  <div class="success-card">
+    <span class="success-icon">☕</span>
+    <h2>응모 완료!</h2>
+    <p>소중한 카페를 나눠주셔서 감사해요.<br>선정되시면 별도로 연락드리겠습니다.<br><br>스타벅스 상품권이 함께하길 바랍니다 🎁</p>
+  </div>
+</div>
+
+<script>
+  // ── Google Sheets 연동 설정 ──────────────────────────────────────
+  // 1. Google Sheets에서 새 시트 생성
+  // 2. 확장 프로그램 → Apps Script → 아래 코드 붙여넣기 후 배포
+  // 3. 배포 URL을 SCRIPT_URL에 입력
+  //
+  // Apps Script 코드:
+  // function doPost(e) {
+  //   var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  //   var data = JSON.parse(e.postData.contents);
+  //   sheet.appendRow([
+  //     new Date(), data.name, data.dept, data.phone,
+  //     data['cafe-name'], data.location, data.menu,
+  //     data.story, data.reason, data.timing,
+  //     data.vibe, data.caution, data.tagline
+  //   ]);
+  //   return ContentService.createTextOutput(JSON.stringify({result:'success'}))
+  //     .setMimeType(ContentService.MimeType.JSON);
+  // }
+  // ──────────────────────────────────────────────────────────────────
+
+  const SCRIPT_URL =https://script.google.com/macros/s/AKfycbxntXib7P5Pojfn0JrIkKrduwBOUccqcRXyVPhPpzVR9riY0DU4zGnYWKR4qZv3IOz4gA/exec
+
+  // Phone formatting
+  document.getElementById('phone').addEventListener('input', function(e) {
+    let v = e.target.value.replace(/\D/g, '');
+    if (v.length <= 3) e.target.value = v;
+    else if (v.length <= 7) e.target.value = v.slice(0,3) + '-' + v.slice(3);
+    else e.target.value = v.slice(0,3) + '-' + v.slice(3,7) + '-' + v.slice(7,11);
+  });
+
+  // Validation helpers
+  function setError(wrapId, show) {
+    const el = document.getElementById(wrapId);
+    if (!el) return;
+    el.classList.toggle('has-error', show);
+  }
+
+  function validatePhone(val) {
+    return /^010-\d{4}-\d{4}$/.test(val);
+  }
+
+  function validate() {
+    let ok = true;
+    const required = [
+      { id: 'wrap-name', input: 'name' },
+      { id: 'wrap-dept', input: 'dept' },
+      { id: 'wrap-phone', input: 'phone', fn: validatePhone },
+      { id: 'wrap-cafe-name', input: 'cafe-name' },
+      { id: 'wrap-location', input: 'location' },
+      { id: 'wrap-menu', input: 'menu' },
+      { id: 'wrap-story', input: 'story' },
+      { id: 'wrap-reason', input: 'reason' },
+      { id: 'wrap-tagline', input: 'tagline' },
+    ];
+
+    required.forEach(({ id, input, fn }) => {
+      const val = document.getElementById(input)?.value.trim();
+      const fail = fn ? !fn(val) : !val;
+      setError(id, fail);
+      if (fail) ok = false;
+    });
+
+    // Timing checkbox
+    const timingChecked = document.querySelectorAll('input[name="timing"]:checked').length > 0;
+    document.getElementById('timing-error').style.display = timingChecked ? 'none' : 'block';
+    if (!timingChecked) ok = false;
+
+    // Vibe radio
+    const vibeChecked = document.querySelector('input[name="vibe"]:checked');
+    document.getElementById('vibe-error').style.display = vibeChecked ? 'none' : 'block';
+    if (!vibeChecked) ok = false;
+
+    return ok;
+  }
+
+  // Form submit
+  document.getElementById('survey-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    if (!validate()) {
+      const firstError = document.querySelector('.has-error, .field-error[style*="block"]');
+      if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+
+    const btn = document.getElementById('submit-btn');
+    btn.classList.add('loading');
+    btn.disabled = true;
+
+    const timings = [...document.querySelectorAll('input[name="timing"]:checked')].map(c => c.value).join(', ');
+    const vibe = document.querySelector('input[name="vibe"]:checked')?.value || '';
+
+    const payload = {
+      name: document.getElementById('name').value.trim(),
+      dept: document.getElementById('dept').value.trim(),
+      phone: document.getElementById('phone').value.trim(),
+      'cafe-name': document.getElementById('cafe-name').value.trim(),
+      location: document.getElementById('location').value.trim(),
+      menu: document.getElementById('menu').value.trim(),
+      story: document.getElementById('story').value.trim(),
+      reason: document.getElementById('reason').value.trim(),
+      timing: timings,
+      vibe: vibe,
+      caution: document.getElementById('caution').value.trim(),
+      tagline: document.getElementById('tagline').value.trim(),
+    };
+
+    try {
+      if (SCRIPT_URL !== 'YOUR_APPS_SCRIPT_URL_HERE') {
+        await fetch(SCRIPT_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+      }
+      document.getElementById('success-overlay').classList.add('show');
+    } catch (err) {
+      console.error(err);
+      alert('제출 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+      btn.classList.remove('loading');
+      btn.disabled = false;
+    }
+  });
+
+  // Close success on click
+  document.getElementById('success-overlay').addEventListener('click', function() {
+    this.classList.remove('show');
+  });
+</script>
+</body>
+</html>
