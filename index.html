@@ -742,7 +742,7 @@
   // ═══════════════════════════════════════════════════════
   // ① Apps Script URL (이 URL 하나로 Sheets + Drive 모두 처리)
   // ═══════════════════════════════════════════════════════
-  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwfjEQat34wNyyvC4gIL4vMuzgSAoXuo7yQb0iZE_CqFmvtWU9whhojsma68T6Acl8mIA/exec';
+  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxntXib7P5Pojfn0JrIkKrduwBOUccqcRXyVPhPpzVR9riY0DU4zGnYWKR4qZv3IOz4gA/exec';
 
   // ═══════════════════════════════════════════════════════
   // ② 사진 파일 관리
@@ -993,27 +993,33 @@
 
     try {
       const activeFiles = selectedFiles.filter(Boolean);
-      const photoNames  = [];
+      const photoUrls   = [];
 
-      // ── 사진: 압축 후 iframe form으로 Drive에 전송 ──
+      // ── 사진: Imgur API로 직접 업로드 → URL 수집 ──
+      // Imgur는 CORS 허용 + 응답 읽기 가능 + 무료 익명 업로드 지원
       for (let i = 0; i < activeFiles.length; i++) {
         const file        = activeFiles[i];
         const b64         = await fileToBase64(file);
         const previewItem = previewGrid.children[i];
-        if (previewItem) showProgress(previewItem, 50);
+        if (previewItem) showProgress(previewItem, 30);
 
-        await submitViaForm({
-          action:   'uploadPhoto',
-          fileName: submitter + '_' + (i + 1) + '_' + file.name,
-          mimeType: 'image/jpeg',
-          data:     b64,
+        const formData = new FormData();
+        formData.append('image', b64);
+        formData.append('type',  'base64');
+        formData.append('title', submitter + '_' + (i + 1));
+
+        const res  = await fetch('https://api.imgur.com/3/image', {
+          method:  'POST',
+          headers: { Authorization: 'Client-ID 546c25a59c58ad7' },
+          body:    formData,
         });
+        const json = await res.json();
 
-        photoNames.push(submitter + '_' + (i + 1) + '_' + file.name);
         if (previewItem) showProgress(previewItem, 100);
+        if (json.success) photoUrls.push(json.data.link);
       }
 
-      // ── 폼 텍스트 데이터 → Sheets 저장 ──
+      // ── 폼 텍스트 데이터 + Imgur URL → Sheets 저장 (iframe form) ──
       await submitViaForm({
         action:      'saveForm',
         name:        submitter,
@@ -1028,7 +1034,7 @@
         vibe:        vibe,
         caution:     document.getElementById('caution').value.trim(),
         tagline:     document.getElementById('tagline').value.trim(),
-        photos:      photoNames.join(', '),
+        photos:      photoUrls.join('\n'),
       });
 
       btn.classList.remove('loading');
