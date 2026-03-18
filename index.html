@@ -457,6 +457,84 @@
     50% { opacity: 0.4; }
   }
 
+  /* Upload zone */
+  .upload-zone {
+    border: 1.5px dashed rgba(196,149,106,0.45);
+    border-radius: 12px;
+    background: var(--foam);
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    overflow: hidden;
+  }
+  .upload-zone:hover, .upload-zone.dragover {
+    border-color: var(--latte);
+    background: rgba(196,149,106,0.07);
+  }
+  .upload-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 28px 20px;
+    gap: 6px;
+  }
+  .upload-icon { font-size: 28px; line-height: 1; }
+  .upload-text { font-size: 14px; font-weight: 500; color: var(--mocha); margin: 0; }
+  .upload-sub  { font-size: 12px; color: var(--text-sub); margin: 0; }
+  .preview-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    padding: 12px;
+  }
+  .preview-grid:empty { display: none; }
+  .preview-item {
+    position: relative;
+    aspect-ratio: 1;
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--steam);
+  }
+  .preview-item img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .preview-item .remove-btn {
+    position: absolute;
+    top: 5px; right: 5px;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: rgba(44,26,14,0.7);
+    color: #fff;
+    border: none;
+    font-size: 13px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .preview-item .upload-progress {
+    position: absolute;
+    inset: 0;
+    background: rgba(44,26,14,0.45);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    color: #fff;
+    font-size: 12px;
+  }
+  .progress-bar-wrap {
+    width: 70%;
+    height: 4px;
+    background: rgba(255,255,255,0.3);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .progress-bar { height: 100%; background: var(--latte); transition: width 0.3s; }
+
   /* Footer */
   .footer {
     text-align: center;
@@ -554,6 +632,21 @@
         <input type="text" id="menu" name="menu" placeholder="예) 흑임자 라떼, 맛이 정말 진해요!" maxlength="100">
         <div class="field-error">추천 메뉴를 입력해주세요.</div>
       </div>
+      <div class="card" id="wrap-photos">
+        <label>카페 사진 <span style="font-size:11px;font-weight:400;color:var(--text-sub);margin-left:4px;">(선택)</span>
+          <span class="hint">최대 3장, 직접 찍은 사진을 올려주세요 (JPG·PNG, 장당 최대 10MB)</span>
+        </label>
+        <div class="upload-zone" id="upload-zone">
+          <input type="file" id="photo-input" accept="image/*" multiple style="display:none">
+          <div class="upload-placeholder" id="upload-placeholder">
+            <div class="upload-icon">📷</div>
+            <p class="upload-text">클릭하거나 사진을 드래그하세요</p>
+            <p class="upload-sub">JPG, PNG · 최대 3장 · 장당 10MB 이하</p>
+          </div>
+          <div class="preview-grid" id="preview-grid"></div>
+        </div>
+        <div class="field-error" id="photo-error"></div>
+      </div>
     </div>
 
     <!-- 추천 이유 -->
@@ -616,7 +709,7 @@
         <input type="text" id="tagline" name="tagline" placeholder="예) 아는 사람만 찾아오는, 골목 안 작은 보물 같은 카페" maxlength="80">
         <div class="field-error">한 줄 추천사를 입력해주세요.</div>
       </div>
-
+    </div>
 
     <!-- Submit -->
     <div class="submit-wrap">
@@ -646,29 +739,95 @@
 </div>
 
 <script>
-  // ── Google Sheets 연동 설정 ──────────────────────────────────────
-  // 1. Google Sheets에서 새 시트 생성
-  // 2. 확장 프로그램 → Apps Script → 아래 코드 붙여넣기 후 배포
-  // 3. 배포 URL을 SCRIPT_URL에 입력
-  //
-  // Apps Script 코드:
-  // function doPost(e) {
-  //   var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-  //   var data = JSON.parse(e.postData.contents);
-  //   sheet.appendRow([
-  //     new Date(), data.name, data.dept, data.phone,
-  //     data['cafe-name'], data.location, data.menu,
-  //     data.story, data.reason, data.timing,
-  //     data.vibe, data.caution, data.tagline
-  //   ]);
-  //   return ContentService.createTextOutput(JSON.stringify({result:'success'}))
-  //     .setMimeType(ContentService.MimeType.JSON);
-  // }
-  // ──────────────────────────────────────────────────────────────────
-
+  // ═══════════════════════════════════════════════════════
+  // ① Apps Script URL (이 URL 하나로 Sheets + Drive 모두 처리)
+  // ═══════════════════════════════════════════════════════
   const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxntXib7P5Pojfn0JrIkKrduwBOUccqcRXyVPhPpzVR9riY0DU4zGnYWKR4qZv3IOz4gA/exec';
 
-  // Phone formatting
+  // ═══════════════════════════════════════════════════════
+  // ② 사진 파일 관리
+  // ═══════════════════════════════════════════════════════
+  let selectedFiles = [];
+
+  const uploadZone    = document.getElementById('upload-zone');
+  const photoInput    = document.getElementById('photo-input');
+  const previewGrid   = document.getElementById('preview-grid');
+  const placeholder   = document.getElementById('upload-placeholder');
+
+  // 클릭으로 파일 선택
+  uploadZone.addEventListener('click', () => photoInput.click());
+
+  // 드래그 앤 드롭
+  uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+  uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+  uploadZone.addEventListener('drop', e => {
+    e.preventDefault();
+    uploadZone.classList.remove('dragover');
+    handleFiles([...e.dataTransfer.files]);
+  });
+
+  photoInput.addEventListener('change', () => handleFiles([...photoInput.files]));
+
+  function handleFiles(files) {
+    const imageFiles = files.filter(f => f.type.startsWith('image/'));
+    const remaining  = 3 - selectedFiles.length;
+    const toAdd      = imageFiles.slice(0, remaining);
+
+    const oversized = toAdd.filter(f => f.size > 10 * 1024 * 1024);
+    if (oversized.length) {
+      showPhotoError('사진 한 장의 크기는 10MB 이하여야 해요.');
+      return;
+    }
+    hidePhotoError();
+    toAdd.forEach(addPreview);
+    photoInput.value = '';
+  }
+
+  function addPreview(file) {
+    selectedFiles.push(file);
+    const idx  = selectedFiles.length - 1;
+    const item = document.createElement('div');
+    item.className = 'preview-item';
+    item.dataset.idx = idx;
+
+    const img = document.createElement('img');
+    img.src = URL.createObjectURL(file);
+
+    const btn = document.createElement('button');
+    btn.className = 'remove-btn';
+    btn.type = 'button';
+    btn.innerHTML = '✕';
+    btn.onclick = (e) => { e.stopPropagation(); removePreview(item, idx); };
+
+    item.appendChild(img);
+    item.appendChild(btn);
+    previewGrid.appendChild(item);
+    updatePlaceholder();
+  }
+
+  function removePreview(item, idx) {
+    selectedFiles[idx] = null;
+    item.remove();
+    updatePlaceholder();
+  }
+
+  function updatePlaceholder() {
+    const count = selectedFiles.filter(Boolean).length;
+    placeholder.style.display = count >= 3 ? 'none' : 'flex';
+  }
+
+  function showPhotoError(msg) {
+    const el = document.getElementById('photo-error');
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+  function hidePhotoError() {
+    document.getElementById('photo-error').style.display = 'none';
+  }
+
+  // ═══════════════════════════════════════════════════════
+  // ③ 전화번호 자동 포맷
+  // ═══════════════════════════════════════════════════════
   document.getElementById('phone').addEventListener('input', function(e) {
     let v = e.target.value.replace(/\D/g, '');
     if (v.length <= 3) e.target.value = v;
@@ -676,11 +835,12 @@
     else e.target.value = v.slice(0,3) + '-' + v.slice(3,7) + '-' + v.slice(7,11);
   });
 
-  // Validation helpers
+  // ═══════════════════════════════════════════════════════
+  // ④ 유효성 검사
+  // ═══════════════════════════════════════════════════════
   function setError(wrapId, show) {
     const el = document.getElementById(wrapId);
-    if (!el) return;
-    el.classList.toggle('has-error', show);
+    if (el) el.classList.toggle('has-error', show);
   }
 
   function validatePhone(val) {
@@ -690,38 +850,67 @@
   function validate() {
     let ok = true;
     const required = [
-      { id: 'wrap-name', input: 'name' },
-      { id: 'wrap-dept', input: 'dept' },
-      { id: 'wrap-phone', input: 'phone', fn: validatePhone },
+      { id: 'wrap-name',      input: 'name' },
+      { id: 'wrap-dept',      input: 'dept' },
+      { id: 'wrap-phone',     input: 'phone', fn: validatePhone },
       { id: 'wrap-cafe-name', input: 'cafe-name' },
-      { id: 'wrap-location', input: 'location' },
-      { id: 'wrap-menu', input: 'menu' },
-      { id: 'wrap-story', input: 'story' },
-      { id: 'wrap-reason', input: 'reason' },
-      { id: 'wrap-tagline', input: 'tagline' },
+      { id: 'wrap-location',  input: 'location' },
+      { id: 'wrap-menu',      input: 'menu' },
+      { id: 'wrap-story',     input: 'story' },
+      { id: 'wrap-reason',    input: 'reason' },
+      { id: 'wrap-tagline',   input: 'tagline' },
     ];
 
     required.forEach(({ id, input, fn }) => {
-      const val = document.getElementById(input)?.value.trim();
+      const val  = document.getElementById(input)?.value.trim();
       const fail = fn ? !fn(val) : !val;
       setError(id, fail);
       if (fail) ok = false;
     });
 
-    // Timing checkbox
     const timingChecked = document.querySelectorAll('input[name="timing"]:checked').length > 0;
     document.getElementById('timing-error').style.display = timingChecked ? 'none' : 'block';
     if (!timingChecked) ok = false;
 
-    // Vibe radio
     const vibeChecked = document.querySelector('input[name="vibe"]:checked');
     document.getElementById('vibe-error').style.display = vibeChecked ? 'none' : 'block';
     if (!vibeChecked) ok = false;
 
+    // 사진은 선택 항목 — 유효성 검사 없음
+
     return ok;
   }
 
-  // Form submit
+  // ═══════════════════════════════════════════════════════
+  // ⑤ 이미지 → base64 변환
+  // ═══════════════════════════════════════════════════════
+  function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload  = () => resolve(reader.result.split(',')[1]);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // ═══════════════════════════════════════════════════════
+  // ⑥ 업로드 진행 표시
+  // ═══════════════════════════════════════════════════════
+  function showProgress(item, pct) {
+    let overlay = item.querySelector('.upload-progress');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.className = 'upload-progress';
+      overlay.innerHTML = '<div class="progress-bar-wrap"><div class="progress-bar"></div></div><span>업로드 중</span>';
+      item.appendChild(overlay);
+    }
+    overlay.querySelector('.progress-bar').style.width = pct + '%';
+    if (pct >= 100) setTimeout(() => overlay.remove(), 400);
+  }
+
+  // ═══════════════════════════════════════════════════════
+  // ⑦ 폼 제출
+  // ═══════════════════════════════════════════════════════
   document.getElementById('survey-form').addEventListener('submit', async function(e) {
     e.preventDefault();
     if (!validate()) {
@@ -735,37 +924,66 @@
     btn.disabled = true;
 
     const timings = [...document.querySelectorAll('input[name="timing"]:checked')].map(c => c.value).join(', ');
-    const vibe = document.querySelector('input[name="vibe"]:checked')?.value || '';
-
-    const payload = {
-      name: document.getElementById('name').value.trim(),
-      dept: document.getElementById('dept').value.trim(),
-      phone: document.getElementById('phone').value.trim(),
-      'cafe-name': document.getElementById('cafe-name').value.trim(),
-      location: document.getElementById('location').value.trim(),
-      menu: document.getElementById('menu').value.trim(),
-      story: document.getElementById('story').value.trim(),
-      reason: document.getElementById('reason').value.trim(),
-      timing: timings,
-      vibe: vibe,
-      caution: document.getElementById('caution').value.trim(),
-      tagline: document.getElementById('tagline').value.trim(),
-    };
+    const vibe    = document.querySelector('input[name="vibe"]:checked')?.value || '';
 
     try {
-      if (SCRIPT_URL !== 'YOUR_APPS_SCRIPT_URL_HERE') {
+      const activeFiles = selectedFiles.filter(Boolean);
+
+      // 사진이 있으면 각각 base64로 변환해서 전송 (no-cors → Drive URL 반환 불가이므로 파일명 기록)
+      for (let i = 0; i < activeFiles.length; i++) {
+        const file        = activeFiles[i];
+        const b64         = await fileToBase64(file);
+        const previewItem = previewGrid.children[i];
+        if (previewItem) showProgress(previewItem, 40);
+
         fetch(SCRIPT_URL, {
           method: 'POST',
-          mode: 'no-cors',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
+          mode:   'no-cors',
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify({
+            action:   'uploadPhoto',
+            fileName: file.name,
+            mimeType: file.type,
+            data:     b64,
+            submitter: document.getElementById('name').value.trim(),
+          }),
         });
+
+        if (previewItem) showProgress(previewItem, 100);
       }
+
+      // 텍스트 데이터를 Sheets에 저장 (no-cors 사용 → CORS preflight 우회)
+      const payload = {
+        action:      'saveForm',
+        name:        document.getElementById('name').value.trim(),
+        dept:        document.getElementById('dept').value.trim(),
+        phone:       document.getElementById('phone').value.trim(),
+        'cafe-name': document.getElementById('cafe-name').value.trim(),
+        location:    document.getElementById('location').value.trim(),
+        menu:        document.getElementById('menu').value.trim(),
+        story:       document.getElementById('story').value.trim(),
+        reason:      document.getElementById('reason').value.trim(),
+        timing:      timings,
+        vibe:        vibe,
+        caution:     document.getElementById('caution').value.trim(),
+        tagline:     document.getElementById('tagline').value.trim(),
+        photoCount:  activeFiles.length,
+      };
+
+      fetch(SCRIPT_URL, {
+        method: 'POST',
+        mode:   'no-cors',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify(payload),
+      });
+
+      // no-cors는 응답을 읽을 수 없으므로 딜레이 후 성공 처리
       setTimeout(() => {
         btn.classList.remove('loading');
         btn.disabled = false;
         document.getElementById('success-overlay').classList.add('show');
       }, 800);
+
     } catch (err) {
       console.error(err);
       alert('제출 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
@@ -774,7 +992,7 @@
     }
   });
 
-  // Close success on click
+  // 성공 팝업 닫기
   document.getElementById('success-overlay').addEventListener('click', function() {
     this.classList.remove('show');
   });
