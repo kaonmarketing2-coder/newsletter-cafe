@@ -742,7 +742,7 @@
   // ═══════════════════════════════════════════════════════
   // ① Apps Script URL (이 URL 하나로 Sheets + Drive 모두 처리)
   // ═══════════════════════════════════════════════════════
-  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxntXib7P5Pojfn0JrIkKrduwBOUccqcRXyVPhPpzVR9riY0DU4zGnYWKR4qZv3IOz4gA/exec';
+  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwfjEQat34wNyyvC4gIL4vMuzgSAoXuo7yQb0iZE_CqFmvtWU9whhojsma68T6Acl8mIA/exec';
 
   // ═══════════════════════════════════════════════════════
   // ② 사진 파일 관리
@@ -936,18 +936,41 @@
   // ═══════════════════════════════════════════════════════
   // ═══════════════════════════════════════════════════════
   // ⑦ Apps Script 전송 헬퍼
-  //    URLSearchParams 방식 → Content-Type: application/x-www-form-urlencoded
-  //    → 브라우저가 preflight(OPTIONS)를 보내지 않음 → CORS 오류 없음
+  //    iframe hidden form 방식 → CORS / preflight / 리다이렉트 완전 우회
+  //    브라우저가 form submit으로 처리 → 어떤 상황에서도 차단되지 않음
+  //    단, 응답을 읽을 수 없으므로 타이머로 성공 처리
   // ═══════════════════════════════════════════════════════
-  async function postToScript(obj) {
-    const params = new URLSearchParams();
-    params.append('payload', JSON.stringify(obj));
-    const res = await fetch(SCRIPT_URL, {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body:    params.toString(),
+  function submitViaForm(obj) {
+    return new Promise((resolve) => {
+      const iframe = document.createElement('iframe');
+      iframe.name  = 'hidden-submit-' + Date.now();
+      iframe.style.cssText = 'display:none;position:absolute;width:0;height:0;';
+      document.body.appendChild(iframe);
+
+      const form   = document.createElement('form');
+      form.method  = 'POST';
+      form.action  = SCRIPT_URL;
+      form.target  = iframe.name;
+      form.style.display = 'none';
+
+      const input  = document.createElement('input');
+      input.type   = 'hidden';
+      input.name   = 'payload';
+      input.value  = JSON.stringify(obj);
+      form.appendChild(input);
+      document.body.appendChild(form);
+
+      // iframe 로드 완료 = 전송 완료 신호
+      iframe.onload = () => {
+        resolve({ ok: true });
+        setTimeout(() => {
+          form.remove();
+          iframe.remove();
+        }, 1000);
+      };
+
+      form.submit();
     });
-    return res.json();
   }
 
   // ⑧ 폼 제출
@@ -970,28 +993,28 @@
 
     try {
       const activeFiles = selectedFiles.filter(Boolean);
-      const driveUrls   = [];
+      const photoNames  = [];
 
-      // ── 사진 업로드: 1장씩 Drive에 저장 후 URL 수집 ──
+      // ── 사진: 압축 후 iframe form으로 Drive에 전송 ──
       for (let i = 0; i < activeFiles.length; i++) {
         const file        = activeFiles[i];
         const b64         = await fileToBase64(file);
         const previewItem = previewGrid.children[i];
-        if (previewItem) showProgress(previewItem, 30);
+        if (previewItem) showProgress(previewItem, 50);
 
-        const result = await postToScript({
+        await submitViaForm({
           action:   'uploadPhoto',
           fileName: submitter + '_' + (i + 1) + '_' + file.name,
-          mimeType: file.type,
+          mimeType: 'image/jpeg',
           data:     b64,
         });
 
+        photoNames.push(submitter + '_' + (i + 1) + '_' + file.name);
         if (previewItem) showProgress(previewItem, 100);
-        if (result.url) driveUrls.push(result.url);
       }
 
-      // ── 폼 데이터 + Drive URL → Sheets 저장 ──
-      await postToScript({
+      // ── 폼 텍스트 데이터 → Sheets 저장 ──
+      await submitViaForm({
         action:      'saveForm',
         name:        submitter,
         dept:        document.getElementById('dept').value.trim(),
@@ -1005,7 +1028,7 @@
         vibe:        vibe,
         caution:     document.getElementById('caution').value.trim(),
         tagline:     document.getElementById('tagline').value.trim(),
-        photos:      driveUrls.join(', '),
+        photos:      photoNames.join(', '),
       });
 
       btn.classList.remove('loading');
@@ -1013,7 +1036,7 @@
       document.getElementById('success-overlay').classList.add('show');
 
     } catch (err) {
-      console.error(err);
+      console.error('[제출 오류]', err);
       alert('제출 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
       btn.classList.remove('loading');
       btn.disabled = false;
