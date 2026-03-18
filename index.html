@@ -928,34 +928,37 @@
 
     try {
       const activeFiles = selectedFiles.filter(Boolean);
+      const driveUrls   = [];
+      const submitter   = document.getElementById('name').value.trim();
 
-      // 사진이 있으면 각각 base64로 변환해서 전송 (no-cors → Drive URL 반환 불가이므로 파일명 기록)
+      // ── 사진 업로드: 1장씩 순서대로 Drive에 저장 후 URL 수집 ──
       for (let i = 0; i < activeFiles.length; i++) {
         const file        = activeFiles[i];
         const b64         = await fileToBase64(file);
         const previewItem = previewGrid.children[i];
-        if (previewItem) showProgress(previewItem, 40);
+        if (previewItem) showProgress(previewItem, 30);
 
-        fetch(SCRIPT_URL, {
-          method: 'POST',
-          mode:   'no-cors',
-          headers: { 'Content-Type': 'text/plain' },
+        const res  = await fetch(SCRIPT_URL, {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            action:   'uploadPhoto',
-            fileName: file.name,
-            mimeType: file.type,
-            data:     b64,
-            submitter: document.getElementById('name').value.trim(),
+            action:    'uploadPhoto',
+            fileName:  submitter + '_' + (i + 1) + '_' + file.name,
+            mimeType:  file.type,
+            data:      b64,
           }),
         });
+        if (previewItem) showProgress(previewItem, 80);
 
+        const json = await res.json();
+        if (json.url) driveUrls.push(json.url);
         if (previewItem) showProgress(previewItem, 100);
       }
 
-      // 텍스트 데이터를 Sheets에 저장 (no-cors 사용 → CORS preflight 우회)
+      // ── 폼 데이터 + Drive URL을 Sheets에 저장 ──
       const payload = {
         action:      'saveForm',
-        name:        document.getElementById('name').value.trim(),
+        name:        submitter,
         dept:        document.getElementById('dept').value.trim(),
         phone:       document.getElementById('phone').value.trim(),
         'cafe-name': document.getElementById('cafe-name').value.trim(),
@@ -967,22 +970,18 @@
         vibe:        vibe,
         caution:     document.getElementById('caution').value.trim(),
         tagline:     document.getElementById('tagline').value.trim(),
-        photoCount:  activeFiles.length,
+        photos:      driveUrls.join(', '),
       };
 
-      fetch(SCRIPT_URL, {
-        method: 'POST',
-        mode:   'no-cors',
-        headers: { 'Content-Type': 'text/plain' },
+      await fetch(SCRIPT_URL, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
 
-      // no-cors는 응답을 읽을 수 없으므로 딜레이 후 성공 처리
-      setTimeout(() => {
-        btn.classList.remove('loading');
-        btn.disabled = false;
-        document.getElementById('success-overlay').classList.add('show');
-      }, 800);
+      btn.classList.remove('loading');
+      btn.disabled = false;
+      document.getElementById('success-overlay').classList.add('show');
 
     } catch (err) {
       console.error(err);
