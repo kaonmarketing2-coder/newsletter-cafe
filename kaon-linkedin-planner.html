@@ -1,0 +1,1712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KAON LinkedIn Content Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   CSS VARIABLES
+   ============================================================ */
+:root {
+  --bg:#f0f2f7; --bg-card:#ffffff; --bg-sidebar:#f8f9fc; --bg-input:#ffffff;
+  --border:#e2e6f0; --border-focus:#2563eb;
+  --text-primary:#0d1b3e; --text-secondary:#5a6480; --text-muted:#9aa3bc;
+  --accent:#2563eb; --accent-light:#eff6ff; --accent-hover:#1d4ed8;
+  --danger:#e03a3a; --success:#1a9e5c; --warning:#d97706;
+  --shadow-sm:0 1px 3px rgba(13,27,62,.06),0 1px 2px rgba(13,27,62,.04);
+  --shadow-md:0 4px 12px rgba(13,27,62,.08),0 2px 6px rgba(13,27,62,.05);
+  --radius:10px; --radius-sm:6px;
+  --font-sans:'IBM Plex Sans',sans-serif;
+  --font-mono:'IBM Plex Mono',monospace;
+  --font-display:'Syne',sans-serif;
+  --header-h:60px; --nav-h:46px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--font-sans);background:var(--bg);color:var(--text-primary);min-height:100vh;font-size:14px;line-height:1.5}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+button{cursor:pointer;font-family:var(--font-sans);border:none;background:none}
+input,select,textarea{font-family:var(--font-sans)}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px}
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+.header{
+  position:sticky;top:0;z-index:200;height:var(--header-h);
+  background:var(--bg-card);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 24px;gap:12px;
+  box-shadow:var(--shadow-sm);
+}
+.header-logo{
+  width:32px;height:32px;background:var(--accent);border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;font-family:var(--font-display);font-size:14px;font-weight:800;flex-shrink:0;
+}
+.header-title{
+  font-family:var(--font-display);font-size:15px;font-weight:700;
+  color:var(--text-primary);letter-spacing:-.3px;white-space:nowrap;
+}
+.header-title span{color:var(--accent)}
+.header-badge{
+  font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;
+  background:var(--accent-light);color:var(--accent);letter-spacing:.05em;white-space:nowrap;
+}
+.header-sep{flex:1}
+.header-kpis{display:flex;gap:6px;align-items:center}
+.h-kpi{
+  display:flex;align-items:center;gap:5px;padding:4px 11px;
+  border-radius:99px;background:var(--bg);border:1px solid var(--border);
+  font-size:11px;color:var(--text-secondary);white-space:nowrap;
+}
+.h-kpi-num{font-family:var(--font-display);font-size:14px;font-weight:700;color:var(--text-primary)}
+.h-kpi.accent .h-kpi-num{color:var(--accent)}
+.h-kpi.success .h-kpi-num{color:var(--success)}
+.header-actions{display:flex;gap:6px;align-items:center}
+
+/* ============================================================
+   BUTTONS
+   ============================================================ */
+.btn-icon{
+  width:32px;height:32px;border-radius:var(--radius-sm);
+  display:flex;align-items:center;justify-content:center;
+  color:var(--text-secondary);background:var(--bg);border:1px solid var(--border);
+  font-size:15px;transition:all .15s;flex-shrink:0;
+}
+.btn-icon:hover{background:var(--accent-light);color:var(--accent);border-color:var(--accent)}
+.btn-primary{
+  display:inline-flex;align-items:center;gap:6px;padding:0 14px;height:32px;
+  border-radius:var(--radius-sm);background:var(--accent);color:#fff;
+  font-size:12px;font-weight:600;transition:background .15s;white-space:nowrap;
+}
+.btn-primary:hover{background:var(--accent-hover)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed}
+.btn-secondary{
+  display:inline-flex;align-items:center;gap:5px;padding:0 12px;height:32px;
+  border-radius:var(--radius-sm);background:var(--bg-card);color:var(--text-secondary);
+  font-size:12px;font-weight:500;border:1px solid var(--border);transition:all .15s;white-space:nowrap;
+}
+.btn-secondary:hover{border-color:var(--accent);color:var(--accent)}
+.btn-secondary:disabled{opacity:.5;cursor:not-allowed}
+.btn-sm{
+  display:inline-flex;align-items:center;gap:3px;padding:4px 9px;
+  border-radius:var(--radius-sm);font-size:11px;font-weight:600;
+  border:1px solid var(--border);color:var(--text-secondary);background:var(--bg);
+  transition:all .12s;white-space:nowrap;
+}
+.btn-sm:hover{border-color:var(--accent);color:var(--accent)}
+.btn-sm:disabled{opacity:.4;cursor:not-allowed}
+.btn-sm.btn-active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn-danger-sm{
+  display:inline-flex;align-items:center;gap:3px;padding:5px 10px;
+  border-radius:var(--radius-sm);font-size:11px;font-weight:600;
+  background:rgba(224,58,58,.07);color:var(--danger);border:1px solid rgba(224,58,58,.2);
+  transition:all .12s;
+}
+.btn-danger-sm:hover{background:rgba(224,58,58,.15)}
+
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{
+  display:inline-block;width:13px;height:13px;
+  border:2px solid rgba(255,255,255,.35);border-top-color:#fff;
+  border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;
+}
+.spinner-dark{border-color:rgba(37,99,235,.2);border-top-color:var(--accent)}
+
+/* ============================================================
+   SETTINGS OVERLAY
+   ============================================================ */
+.settings-overlay{
+  position:fixed;inset:0;background:rgba(13,27,62,.35);
+  z-index:500;display:none;backdrop-filter:blur(3px);
+}
+.settings-overlay.open{display:flex;align-items:flex-start;justify-content:flex-end}
+.settings-panel{
+  width:420px;height:100vh;background:var(--bg-card);
+  border-left:1px solid var(--border);
+  box-shadow:-6px 0 30px rgba(13,27,62,.12);
+  overflow-y:auto;padding:24px;
+}
+.settings-header{
+  display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;
+}
+.settings-title{
+  font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--text-primary);
+}
+.settings-section{margin-bottom:22px}
+.settings-section-title{
+  font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--text-muted);margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--border);
+}
+.form-group{margin-bottom:12px}
+.form-label{display:flex;align-items:center;gap:4px;font-size:11px;font-weight:600;color:var(--text-secondary);margin-bottom:4px}
+.form-label .req{color:var(--danger)}
+.form-row{display:flex;gap:6px;align-items:center}
+.form-input{
+  flex:1;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);
+  background:var(--bg-input);color:var(--text-primary);font-size:12px;
+  font-family:var(--font-mono);transition:border-color .15s;
+}
+.form-input:focus{outline:none;border-color:var(--border-focus)}
+.form-hint{font-size:10px;color:var(--text-muted);margin-top:4px;line-height:1.5}
+.form-status{
+  display:inline-flex;align-items:center;gap:3px;font-size:10px;
+  font-family:var(--font-mono);padding:3px 9px;border-radius:99px;white-space:nowrap;flex-shrink:0;
+}
+.status-set{background:rgba(26,158,92,.1);color:var(--success)}
+.status-unset{background:var(--bg);color:var(--text-muted);border:1px solid var(--border)}
+.sync-row{display:flex;gap:6px;flex-wrap:wrap}
+
+/* ============================================================
+   TAB NAVIGATION
+   ============================================================ */
+.tab-nav{
+  position:sticky;top:var(--header-h);z-index:100;height:var(--nav-h);
+  background:var(--bg-card);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 24px;gap:4px;
+}
+.tab-nav-btn{
+  padding:6px 16px;border-radius:var(--radius-sm);border:1px solid transparent;
+  background:none;color:var(--text-secondary);font-size:13px;font-weight:500;transition:all .12s;
+}
+.tab-nav-btn:hover{background:var(--bg);border-color:var(--border);color:var(--accent)}
+.tab-nav-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+/* ============================================================
+   MAIN CONTENT
+   ============================================================ */
+.main{padding:20px 24px}
+
+/* ============================================================
+   KPI CARDS
+   ============================================================ */
+.kpi-grid{display:grid;grid-template-columns:repeat(3,minmax(0,160px));gap:10px;margin-bottom:24px}
+.kpi-card{
+  background:var(--bg-card);border:1px solid var(--border);
+  border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow-sm);
+}
+.kpi-label{font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text-muted);margin-bottom:5px}
+.kpi-value{font-family:var(--font-display);font-size:30px;font-weight:700;color:var(--text-primary);line-height:1}
+.kpi-sub{font-size:10px;color:var(--text-muted);margin-top:3px}
+.kpi-card.accent .kpi-value{color:var(--accent)}
+.kpi-card.success .kpi-value{color:var(--success)}
+
+/* ============================================================
+   SECTION
+   ============================================================ */
+.section{margin-bottom:28px}
+.section-header{
+  display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;
+}
+.section-title{
+  font-family:var(--font-display);font-size:16px;font-weight:700;
+  color:var(--text-primary);letter-spacing:-.3px;
+}
+.section-count{
+  font-size:11px;font-family:var(--font-mono);
+  background:var(--border);color:var(--text-muted);padding:2px 8px;border-radius:99px;
+}
+.sep{flex:1}
+
+/* ============================================================
+   EMPTY STATE
+   ============================================================ */
+.empty-state{text-align:center;padding:48px 24px;color:var(--text-muted)}
+.empty-icon{font-size:40px;margin-bottom:12px}
+.empty-title{font-size:15px;font-weight:600;color:var(--text-secondary);margin-bottom:6px}
+.empty-sub{font-size:12px;line-height:1.7}
+
+/* ============================================================
+   STATUS BANNER
+   ============================================================ */
+.status-banner{
+  display:flex;align-items:center;gap:10px;padding:10px 16px;
+  border-radius:var(--radius-sm);margin-bottom:16px;font-size:12px;font-weight:500;
+}
+.status-banner.warn{background:#fffbeb;border:1px solid #fde68a;color:#92400e}
+.status-banner.info{background:var(--accent-light);border:1px solid rgba(37,99,235,.2);color:#1e40af}
+.status-banner.ok{background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46}
+.status-banner-icon{font-size:16px;flex-shrink:0}
+
+/* ============================================================
+   TOPIC CARDS (Tab 1)
+   ============================================================ */
+.topics-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:12px}
+.topic-card{
+  background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:14px 16px;box-shadow:var(--shadow-sm);position:relative;overflow:hidden;
+  transition:box-shadow .15s,border-color .15s;
+}
+.topic-card::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:var(--border);border-radius:3px 0 0 3px;transition:background .15s;
+}
+.topic-card:hover{box-shadow:var(--shadow-md);border-color:rgba(37,99,235,.3)}
+.topic-card:hover::before{background:var(--accent)}
+.topic-card.selected{border-color:var(--accent);background:var(--accent-light)}
+.topic-card.selected::before{background:var(--accent)}
+.topic-card-header{display:flex;align-items:flex-start;gap:8px;margin-bottom:8px}
+.topic-num{
+  font-size:10px;font-family:var(--font-mono);color:var(--text-muted);
+  background:var(--bg);border:1px solid var(--border);padding:2px 6px;
+  border-radius:4px;flex-shrink:0;margin-top:1px;
+}
+.topic-title{font-size:13px;font-weight:600;color:var(--text-primary);line-height:1.4;flex:1}
+.topic-reason{
+  font-size:11px;color:var(--text-secondary);line-height:1.55;margin-bottom:7px;
+}
+.topic-sources{display:flex;flex-direction:column;gap:3px;margin-bottom:8px}
+.topic-source-link{
+  font-size:10px;color:var(--accent);white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;display:block;
+}
+.topic-footer{
+  display:flex;align-items:center;gap:6px;padding-top:10px;border-top:1px solid var(--border);
+  flex-wrap:wrap;
+}
+.format-badge{
+  font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+  padding:2px 8px;border-radius:99px;white-space:nowrap;
+}
+.fmt-carousel{background:rgba(37,99,235,.1);color:var(--accent)}
+.fmt-text{background:rgba(26,158,92,.1);color:var(--success)}
+.fmt-infographic{background:rgba(217,119,6,.1);color:var(--warning)}
+.topic-actions{display:flex;gap:5px;margin-left:auto}
+.scheduled-badge{font-size:10px;color:var(--success);font-family:var(--font-mono);display:flex;align-items:center;gap:3px}
+
+/* Schedule inline picker */
+.schedule-picker{
+  display:none;margin-top:8px;background:var(--bg);border:1px solid var(--border);
+  border-radius:var(--radius-sm);padding:7px 10px;align-items:center;gap:6px;
+}
+.schedule-picker.open{display:flex}
+.date-input{
+  padding:4px 8px;border:1px solid var(--border);border-radius:var(--radius-sm);
+  font-size:11px;font-family:var(--font-mono);background:var(--bg-input);color:var(--text-primary);
+}
+.date-input:focus{outline:none;border-color:var(--border-focus)}
+
+/* ============================================================
+   CALENDAR (Tab 1)
+   ============================================================ */
+.calendar-wrap{
+  background:var(--bg-card);border:1px solid var(--border);
+  border-radius:var(--radius);box-shadow:var(--shadow-sm);overflow:hidden;
+}
+.cal-dow-row{display:grid;grid-template-columns:repeat(7,1fr);background:var(--bg-sidebar);border-bottom:1px solid var(--border)}
+.cal-dow{
+  padding:8px 6px;text-align:center;font-size:10px;font-weight:700;
+  letter-spacing:.07em;text-transform:uppercase;color:var(--text-muted);
+}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr)}
+.cal-cell{
+  min-height:96px;padding:6px;border-right:1px solid var(--border);
+  border-bottom:1px solid var(--border);vertical-align:top;transition:background .12s;
+}
+.cal-cell:nth-child(7n){border-right:none}
+.cal-cell.other-month{background:var(--bg-sidebar)}
+.cal-cell.is-today{background:var(--accent-light)}
+.cal-cell.drag-over{background:rgba(37,99,235,.06);outline:2px dashed var(--accent);outline-offset:-2px}
+.cal-date{
+  font-size:11px;font-weight:600;color:var(--text-muted);
+  margin-bottom:4px;font-family:var(--font-mono);display:block;
+}
+.cal-cell.is-today .cal-date{color:var(--accent);font-weight:700}
+.cal-chips{display:flex;flex-direction:column;gap:3px}
+.cal-chip{
+  background:var(--accent-light);border:1px solid rgba(37,99,235,.2);border-radius:4px;
+  padding:3px 6px;font-size:10px;font-weight:500;color:var(--accent);
+  cursor:grab;line-height:1.3;display:flex;align-items:flex-start;gap:4px;
+  transition:background .12s;
+}
+.cal-chip:hover{background:rgba(37,99,235,.14)}
+.cal-chip:active{cursor:grabbing}
+.cal-chip-title{flex:1;min-width:0;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.cal-chip-del{
+  margin-left:auto;color:var(--text-muted);font-size:12px;cursor:pointer;
+  flex-shrink:0;line-height:1;padding:0 1px;transition:color .12s;
+}
+.cal-chip-del:hover{color:var(--danger)}
+
+/* ============================================================
+   POST GENERATOR (Tab 2)
+   ============================================================ */
+.post-gen-layout{display:grid;grid-template-columns:280px 1fr;gap:16px;align-items:start}
+.topics-panel{
+  background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);
+  box-shadow:var(--shadow-sm);overflow:hidden;
+  position:sticky;top:calc(var(--header-h) + var(--nav-h) + 20px);
+  max-height:calc(100vh - var(--header-h) - var(--nav-h) - 40px);
+  display:flex;flex-direction:column;
+}
+.topics-panel-header{
+  padding:11px 14px;border-bottom:1px solid var(--border);
+  background:var(--bg-sidebar);flex-shrink:0;
+}
+.topics-panel-title{font-size:11px;font-weight:700;color:var(--text-secondary);letter-spacing:.03em}
+.topic-list-scroll{overflow-y:auto;flex:1}
+.topic-list-item{
+  padding:10px 14px;border-bottom:1px solid var(--border);cursor:pointer;
+  transition:background .12s;border-left:3px solid transparent;
+}
+.topic-list-item:last-child{border-bottom:none}
+.topic-list-item:hover{background:var(--accent-light)}
+.topic-list-item.active{
+  background:var(--accent-light);border-left-color:var(--accent);
+}
+.tli-title{font-size:12px;font-weight:600;color:var(--text-primary);line-height:1.4;margin-bottom:4px}
+.tli-meta{display:flex;align-items:center;gap:6px}
+.tli-fmt{
+  font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
+  padding:1px 6px;border-radius:99px;
+}
+
+/* Drafts panel */
+.drafts-panel{min-height:400px}
+.draft-topic-info{
+  background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:14px 16px;margin-bottom:14px;box-shadow:var(--shadow-sm);
+}
+.dti-title{font-size:15px;font-weight:700;color:var(--text-primary);margin-bottom:6px}
+.dti-meta{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.dti-reason{
+  font-size:12px;color:var(--text-secondary);line-height:1.6;padding:8px 12px;
+  background:var(--bg);border-radius:var(--radius-sm);border-left:3px solid var(--accent);
+  margin-bottom:10px;
+}
+.dti-sources-label{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--text-muted);margin-bottom:5px}
+.dti-source-link{font-size:11px;color:var(--accent);display:block;margin-bottom:3px}
+
+.drafts-actions{display:flex;gap:6px;align-items:center;margin-bottom:14px}
+.versions-label{font-size:11px;color:var(--text-muted);font-family:var(--font-mono)}
+
+.post-versions{display:flex;gap:12px;overflow-x:auto;padding-bottom:6px}
+.post-version-card{
+  background:var(--bg-card);border:1px solid var(--border);
+  border-radius:var(--radius);box-shadow:var(--shadow-sm);overflow:hidden;
+  flex-shrink:0;display:flex;flex-direction:column;
+}
+.post-version-header{
+  padding:8px 12px;background:var(--bg-sidebar);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:6px;flex-shrink:0;
+}
+.version-label{font-size:10px;font-weight:700;color:var(--text-secondary);letter-spacing:.05em}
+.version-actions{margin-left:auto;display:flex;gap:4px}
+.post-textarea{
+  width:100%;flex:1;padding:12px 14px;border:none;background:transparent;
+  color:var(--text-primary);font-size:13px;line-height:1.75;resize:vertical;
+  outline:none;font-family:var(--font-sans);min-height:280px;
+}
+.post-textarea:focus{background:rgba(37,99,235,.015)}
+.char-count{
+  padding:4px 12px;font-size:10px;font-family:var(--font-mono);
+  color:var(--text-muted);border-top:1px solid var(--border);background:var(--bg-sidebar);
+  flex-shrink:0;
+}
+
+/* ============================================================
+   TOAST
+   ============================================================ */
+.toast-container{position:fixed;bottom:20px;right:20px;z-index:999;display:flex;flex-direction:column;gap:8px}
+.toast{
+  padding:10px 16px;border-radius:var(--radius-sm);font-size:12px;font-weight:500;
+  box-shadow:var(--shadow-md);max-width:340px;display:flex;align-items:center;gap:8px;
+  animation:toastIn .2s ease;
+}
+.toast.success{background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0}
+.toast.error{background:#fef2f2;color:#991b1b;border:1px solid #fecaca}
+.toast.info{background:var(--accent-light);color:#1e40af;border:1px solid rgba(37,99,235,.25)}
+.toast.warning{background:#fffbeb;color:#92400e;border:1px solid #fde68a}
+@keyframes toastIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     HEADER
+     ============================================================ -->
+<header class="header">
+  <div class="header-logo">K</div>
+  <span class="header-title">KAON <span>LinkedIn</span> Planner</span>
+  <span class="header-badge">BETA</span>
+  <div class="header-sep"></div>
+  <div class="header-kpis">
+    <div class="h-kpi">
+      <span class="h-kpi-num" id="hkpiArticles">0</span>
+      <span>articles</span>
+    </div>
+    <div class="h-kpi accent">
+      <span class="h-kpi-num" id="hkpiTopics">0</span>
+      <span>topics</span>
+    </div>
+    <div class="h-kpi success">
+      <span class="h-kpi-num" id="hkpiPosts">0</span>
+      <span>posts</span>
+    </div>
+  </div>
+  <div class="header-actions">
+    <button class="btn-icon" id="settingsToggleBtn" onclick="toggleSettings()" title="Settings">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+  </div>
+</header>
+
+<!-- ============================================================
+     SETTINGS PANEL
+     ============================================================ -->
+<div class="settings-overlay" id="settingsOverlay" onclick="onOverlayClick(event)">
+  <div class="settings-panel" id="settingsPanel">
+    <div class="settings-header">
+      <span class="settings-title">Settings</span>
+      <button class="btn-icon" onclick="toggleSettings()" title="Close">✕</button>
+    </div>
+
+    <!-- GitHub -->
+    <div class="settings-section">
+      <div class="settings-section-title">GitHub Repository</div>
+      <div class="form-group">
+        <label class="form-label">Repository <span class="req">*</span></label>
+        <div class="form-row">
+          <input type="text" class="form-input" id="cfgRepo" placeholder="owner/repo-name (e.g. kaon-group/news-dashboard)">
+          <span class="form-status status-unset" id="cfgRepoStatus">○ Not set</span>
+        </div>
+        <div class="form-hint">Same repo used by the KAON News Dashboard (owner/repo format)</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Personal Access Token</label>
+        <div class="form-row">
+          <input type="password" class="form-input" id="cfgPat" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
+          <button class="btn-icon" onclick="toggleVis('cfgPat')" title="Show/hide">👁</button>
+          <span class="form-status status-unset" id="cfgPatStatus">○ Not set</span>
+        </div>
+        <div class="form-hint">Required for private repos. Read scope is enough for Pull. Write scope needed for Push plan.</div>
+      </div>
+      <div class="sync-row">
+        <button class="btn-primary" onclick="saveGhSettings()">Save</button>
+        <button class="btn-secondary" id="pullBtn" onclick="pullData()">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          Pull now
+        </button>
+        <button class="btn-secondary" id="pushBtn" onclick="pushPlan()">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+          Push plan
+        </button>
+      </div>
+    </div>
+
+    <!-- Gemini -->
+    <div class="settings-section">
+      <div class="settings-section-title">Google Gemini API</div>
+      <div class="form-group">
+        <label class="form-label">API Key <span class="req">*</span></label>
+        <div class="form-row">
+          <input type="password" class="form-input" id="cfgGroqKey" placeholder="AIza... 또는 AQ...">
+          <button class="btn-icon" onclick="toggleVis('cfgGroqKey')" title="Show/hide">👁</button>
+          <span class="form-status status-unset" id="cfgGroqStatus">○ Not set</span>
+        </div>
+        <div class="form-hint">aistudio.google.com → kaon marketing 프로젝트의 <strong>...dOP8</strong> 키 사용</div>
+      </div>
+      <button class="btn-primary" onclick="saveGroqKey()">Save Key</button>
+    </div>
+
+    <!-- Data management -->
+    <div class="settings-section" style="padding-top:16px;border-top:1px solid var(--border)">
+      <div class="settings-section-title">Data Management</div>
+      <button class="btn-danger-sm" onclick="clearAllData()">🗑 Clear all local data</button>
+      <div class="form-hint" style="margin-top:6px">Removes cached articles, topics, schedule, and post drafts from this browser.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     TAB NAVIGATION
+     ============================================================ -->
+<nav class="tab-nav">
+  <button class="tab-nav-btn active" id="tabBtn-planner" onclick="switchTab('planner')">📋 Content Planner</button>
+  <button class="tab-nav-btn" id="tabBtn-generator" onclick="switchTab('generator')">✍️ Post Generator</button>
+</nav>
+
+<!-- ============================================================
+     MAIN
+     ============================================================ -->
+<div class="main">
+
+  <!-- KPI Row -->
+  <div class="kpi-grid">
+    <div class="kpi-card accent">
+      <div class="kpi-label">Articles Loaded</div>
+      <div class="kpi-value" id="kpiArticles">0</div>
+      <div class="kpi-sub">from GitHub</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Topics Selected</div>
+      <div class="kpi-value" id="kpiTopics">0</div>
+      <div class="kpi-sub">AI-extracted</div>
+    </div>
+    <div class="kpi-card success">
+      <div class="kpi-label">Posts Generated</div>
+      <div class="kpi-value" id="kpiPosts">0</div>
+      <div class="kpi-sub">drafts created</div>
+    </div>
+  </div>
+
+  <!-- Status banner -->
+  <div id="statusBanner" style="display:none"></div>
+
+  <!-- ======================================================
+       TAB 1: CONTENT PLANNER
+       ====================================================== -->
+  <div id="tab-planner">
+
+    <!-- Topic Extraction -->
+    <div class="section">
+      <div class="section-header">
+        <h2 class="section-title">AI Topic Extraction</h2>
+        <span class="section-count" id="topicCount">0 topics</span>
+        <div class="sep"></div>
+        <button class="btn-secondary" id="clearTopicsBtn" onclick="clearTopics()" style="display:none">Clear all</button>
+        <button class="btn-primary" id="extractBtn" onclick="extractTopics()">
+          ✨ Extract Topics with AI
+        </button>
+      </div>
+      <div id="topicsContainer">
+        <div class="empty-state">
+          <div class="empty-icon">💡</div>
+          <div class="empty-title">No topics yet</div>
+          <div class="empty-sub">
+            Pull news articles from GitHub (Settings → Pull now),<br>
+            then click <strong>Extract Topics with AI</strong> to generate LinkedIn post ideas.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Calendar -->
+    <div class="section">
+      <div class="section-header">
+        <h2 class="section-title">Monthly Content Calendar</h2>
+        <div class="sep"></div>
+        <button class="btn-icon" onclick="changeMonth(-1)" title="Previous month" style="font-size:18px;width:28px;height:28px">‹</button>
+        <span id="calMonthLabel" style="font-family:var(--font-display);font-size:14px;font-weight:700;color:var(--text-primary);min-width:130px;text-align:center"></span>
+        <button class="btn-icon" onclick="changeMonth(1)" title="Next month" style="font-size:18px;width:28px;height:28px">›</button>
+        <button class="btn-secondary" onclick="autoSchedule()">📅 Auto Schedule</button>
+        <button class="btn-secondary" onclick="exportCSV()">⬇ Export CSV</button>
+      </div>
+      <div class="calendar-wrap">
+        <div class="cal-dow-row">
+          <div class="cal-dow">Sun</div><div class="cal-dow">Mon</div><div class="cal-dow">Tue</div>
+          <div class="cal-dow">Wed</div><div class="cal-dow">Thu</div><div class="cal-dow">Fri</div>
+          <div class="cal-dow">Sat</div>
+        </div>
+        <div class="cal-grid" id="calGrid"></div>
+      </div>
+      <div style="margin-top:8px;font-size:11px;color:var(--text-muted)">
+        💡 Click a topic chip to open Post Generator · Drag chips to reschedule · ✕ to unschedule
+      </div>
+    </div>
+
+  </div><!-- /tab-planner -->
+
+  <!-- ======================================================
+       TAB 2: POST GENERATOR
+       ====================================================== -->
+  <div id="tab-generator" style="display:none">
+
+    <div class="post-gen-layout">
+
+      <!-- Left: Topic list -->
+      <div class="topics-panel">
+        <div class="topics-panel-header">
+          <div class="topics-panel-title">SELECT TOPIC</div>
+        </div>
+        <div class="topic-list-scroll" id="topicListContainer">
+          <div class="empty-state" style="padding:24px 12px">
+            <div class="empty-icon" style="font-size:28px">💡</div>
+            <div class="empty-sub" style="font-size:11px">Extract topics in the Content Planner first</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Drafts -->
+      <div class="drafts-panel">
+
+        <!-- Topic detail info card -->
+        <div id="draftTopicInfo" class="draft-topic-info" style="display:none">
+          <div class="dti-title" id="dtiTitle"></div>
+          <div class="dti-meta">
+            <span class="format-badge" id="dtiFormat"></span>
+          </div>
+          <div class="dti-reason" id="dtiReason"></div>
+          <div class="dti-sources-label">Source Articles</div>
+          <div id="dtiSources"></div>
+        </div>
+
+        <!-- Empty when nothing selected -->
+        <div id="draftEmpty" class="empty-state">
+          <div class="empty-icon">✍️</div>
+          <div class="empty-title">No topic selected</div>
+          <div class="empty-sub">Select a topic from the left panel,<br>then generate a LinkedIn post draft.</div>
+        </div>
+
+        <!-- Generate actions -->
+        <div id="draftActions" style="display:none" class="drafts-actions">
+          <button class="btn-primary" id="genPostBtn" onclick="generatePost(false)">
+            ✨ Generate Post
+          </button>
+          <button class="btn-secondary" id="genVersionBtn" onclick="generatePost(true)" style="display:none">
+            + New Version
+          </button>
+          <span class="versions-label" id="versionsLabel"></span>
+        </div>
+
+        <!-- Post version cards -->
+        <div class="post-versions" id="postVersionsContainer"></div>
+
+      </div>
+    </div>
+
+  </div><!-- /tab-generator -->
+
+</div><!-- /main -->
+
+<!-- Toast container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+'use strict';
+
+/* ============================================================
+   STORAGE KEYS
+   ============================================================ */
+const SK = {
+  GH_REPO:    'lip_gh_repo',
+  GH_PAT:     'lip_gh_pat',
+  GROQ_KEY: 'lip_groq_key',
+  ARTICLES:   'lip_articles',
+  TOPICS:     'lip_topics',
+  SCHEDULE:   'lip_schedule',
+  POSTS:      'lip_posts'
+};
+
+const GH_DATA_PATH = 'data/news.json';
+const GH_PLAN_PATH = 'data/linkedin-plan.json';
+const GEMINI_MODEL = 'gemini-2.5-flash';
+
+/* ============================================================
+   APP STATE
+   ============================================================ */
+const state = {
+  articles: [],
+  topics:   [],
+  schedule: {},   // { 'YYYY-MM-DD': [topicId, ...] }
+  posts:    {},   // { topicId: ['draft1', 'draft2', ...] }
+  calYear:  new Date().getFullYear(),
+  calMonth: new Date().getMonth(),
+  selectedTopicId:  null,
+  dragTopicId:      null,
+  dragFromDate:     null
+};
+
+/* ============================================================
+   localStorage HELPERS
+   ============================================================ */
+function lsGet(key, fallback) {
+  try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }
+  catch { return fallback; }
+}
+function lsSet(key, value) {
+  try { localStorage.setItem(key, JSON.stringify(value)); } catch(e) { console.warn('lsSet', e); }
+}
+function lsStr(key, fallback = '') { return localStorage.getItem(key) || fallback; }
+function lsSetStr(key, value)      { localStorage.setItem(key, String(value)); }
+function lsDel(key)                { localStorage.removeItem(key); }
+
+/* ============================================================
+   SETTINGS
+   ============================================================ */
+let settingsOpen = false;
+
+function toggleSettings() {
+  settingsOpen = !settingsOpen;
+  document.getElementById('settingsOverlay').classList.toggle('open', settingsOpen);
+}
+
+function onOverlayClick(e) {
+  if (e.target === document.getElementById('settingsOverlay')) toggleSettings();
+}
+
+function toggleVis(id) {
+  const el = document.getElementById(id);
+  if (el) el.type = el.type === 'password' ? 'text' : 'password';
+}
+
+function setStatus(id, isSet) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = isSet ? '● Set' : '○ Not set';
+  el.className = 'form-status ' + (isSet ? 'status-set' : 'status-unset');
+}
+
+function initSettingsUI() {
+  const repo = lsStr(SK.GH_REPO);
+  const pat  = lsStr(SK.GH_PAT);
+  const key  = lsStr(SK.GROQ_KEY);
+  if (repo) { document.getElementById('cfgRepo').value = repo;       setStatus('cfgRepoStatus',   true); }
+  if (pat)  { document.getElementById('cfgPat').value  = pat;        setStatus('cfgPatStatus',     true); }
+  if (key)  { document.getElementById('cfgGroqKey').value = key;   setStatus('cfgGroqStatus',  true); }
+}
+
+function saveGhSettings() {
+  const repo = (document.getElementById('cfgRepo').value || '').trim();
+  const pat  = (document.getElementById('cfgPat').value  || '').trim();
+  let saved = false;
+  if (repo) { lsSetStr(SK.GH_REPO, repo); setStatus('cfgRepoStatus', true); saved = true; }
+  if (pat)  { lsSetStr(SK.GH_PAT,  pat);  setStatus('cfgPatStatus',  true); }
+  if (saved) { toast('GitHub settings saved', 'success'); updateStatusBanner(); }
+  else        { toast('Please enter a repo (owner/repo)', 'error'); }
+}
+
+function saveGroqKey() {
+  const key = (document.getElementById('cfgGroqKey').value || '').trim();
+  if (!key) { toast('Groq API 키를 입력해주세요', 'error'); return; }
+  lsSetStr(SK.GROQ_KEY, key);
+  setStatus('cfgGroqStatus', true);
+  toast('Groq API 키가 저장되었습니다', 'success');
+  updateStatusBanner();
+}
+
+function clearAllData() {
+  if (!confirm('Clear all local data?\nThis will remove cached articles, topics, schedule, and post drafts.')) return;
+  [SK.ARTICLES, SK.TOPICS, SK.SCHEDULE, SK.POSTS].forEach(k => lsDel(k));
+  state.articles = []; state.topics = []; state.schedule = {}; state.posts = {};
+  state.selectedTopicId = null;
+  renderAll();
+  toast('Local data cleared', 'info');
+}
+
+/* ============================================================
+   STATUS BANNER
+   ============================================================ */
+function updateStatusBanner() {
+  const banner = document.getElementById('statusBanner');
+  const hasRepo   = !!lsStr(SK.GH_REPO);
+  const hasGroq = !!lsStr(SK.GROQ_KEY);
+  const hasArticles = state.articles.length > 0;
+
+  if (!hasRepo || !hasGroq) {
+    banner.style.display = '';
+    banner.innerHTML = `<div class="status-banner warn">
+      <span class="status-banner-icon">⚠️</span>
+      <span>Setup required: ${!hasRepo ? 'GitHub repo not configured. ' : ''}${!hasGroq ? 'Groq API key not set. ' : ''}
+      <button class="btn-sm" style="margin-left:6px" onclick="toggleSettings()">Open Settings</button></span>
+    </div>`;
+  } else if (!hasArticles) {
+    banner.style.display = '';
+    banner.innerHTML = `<div class="status-banner info">
+      <span class="status-banner-icon">ℹ️</span>
+      <span>No articles loaded. Pull news data to get started.
+      <button class="btn-sm" style="margin-left:6px" onclick="pullData()">Pull now</button></span>
+    </div>`;
+  } else {
+    banner.style.display = '';
+    banner.innerHTML = `<div class="status-banner ok">
+      <span class="status-banner-icon">✓</span>
+      <span>${state.articles.length} articles loaded · ${state.topics.length} topics extracted · ${countTotalPosts()} posts drafted</span>
+    </div>`;
+  }
+}
+
+/* ============================================================
+   GITHUB — PULL
+   ============================================================ */
+function getGhParts() {
+  const repo = lsStr(SK.GH_REPO);
+  if (!repo || !repo.includes('/')) return null;
+  const slash = repo.indexOf('/');
+  return {
+    owner:   repo.slice(0, slash),
+    repoName:repo.slice(slash + 1),
+    pat:     lsStr(SK.GH_PAT)
+  };
+}
+
+async function pullData() {
+  const gh = getGhParts();
+  if (!gh) { toast('GitHub repo not configured. Open Settings.', 'error'); return; }
+
+  const btn = document.getElementById('pullBtn');
+  setLoading(btn, true, 'Pulling…');
+  try {
+    const url = `https://raw.githubusercontent.com/${gh.owner}/${gh.repoName}/main/${GH_DATA_PATH}?t=${Date.now()}`;
+    const headers = {};
+    if (gh.pat) headers['Authorization'] = `token ${gh.pat}`;
+    const res = await fetch(url, { headers });
+    if (!res.ok) throw new Error(`HTTP ${res.status} — check repo name and access`);
+
+    const data = await res.json();
+    const articles = Array.isArray(data.articles) ? data.articles : [];
+    state.articles = articles;
+    lsSet(SK.ARTICLES, articles);
+
+    updateKPIs();
+    updateStatusBanner();
+    toast(`✓ Loaded ${articles.length} articles`, 'success');
+  } catch(e) {
+    toast(`Pull failed: ${e.message}`, 'error');
+  } finally {
+    setLoading(btn, false);
+  }
+}
+
+/* ============================================================
+   GITHUB — PUSH PLAN
+   ============================================================ */
+async function pushPlan() {
+  const gh = getGhParts();
+  if (!gh)     { toast('GitHub repo not configured', 'error'); return; }
+  if (!gh.pat) { toast('PAT required for push. Add it in Settings.', 'error'); return; }
+
+  const btn = document.getElementById('pushBtn');
+  setLoading(btn, true, 'Pushing…');
+  try {
+    const apiUrl = `https://api.github.com/repos/${gh.owner}/${gh.repoName}/contents/${GH_PLAN_PATH}`;
+    const authHeader = { Authorization: `token ${gh.pat}`, Accept: 'application/vnd.github+json' };
+
+    const payload = {
+      topics:   state.topics,
+      schedule: state.schedule,
+      posts:    state.posts,
+      savedAt:  new Date().toISOString()
+    };
+    const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(payload, null, 2))));
+
+    let sha = null;
+    const headRes = await fetch(apiUrl, { headers: authHeader });
+    if (headRes.ok) { const meta = await headRes.json(); sha = meta.sha || null; }
+
+    const body = {
+      message: `linkedin-plan: update ${new Date().toISOString().slice(0, 16)}`,
+      content: encoded
+    };
+    if (sha) body.sha = sha;
+
+    const putRes = await fetch(apiUrl, {
+      method: 'PUT',
+      headers: { ...authHeader, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if (!putRes.ok) {
+      const err = await putRes.json().catch(() => ({}));
+      throw new Error(err.message || `HTTP ${putRes.status}`);
+    }
+    toast('✓ LinkedIn plan pushed to GitHub (data/linkedin-plan.json)', 'success');
+  } catch(e) {
+    toast(`Push failed: ${e.message}`, 'error');
+  } finally {
+    setLoading(btn, false);
+  }
+}
+
+/* ============================================================
+   GEMINI API HELPER
+   ============================================================ */
+async function callGemini(systemPrompt, userContent, maxTokens = 4000) {
+  const key = lsStr(SK.GROQ_KEY);
+  if (!key) throw new Error('Gemini API 키가 설정되지 않았습니다. 설정에서 입력해주세요.');
+
+  // OpenAI 호환 엔드포인트 사용 (더 안정적인 JSON 출력)
+  const url = `https://generativelanguage.googleapis.com/v1beta/openai/chat/completions`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${key}`
+    },
+    body: JSON.stringify({
+      model: GEMINI_MODEL,
+      max_tokens: maxTokens,
+      temperature: 0.7,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user',   content: userContent }
+      ],
+      response_format: userContent.includes('JSON') ? { type: 'json_object' } : { type: 'text' }
+    })
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error?.message || `Gemini API: HTTP ${res.status}`);
+  }
+  const data = await res.json();
+  const text = data.choices?.[0]?.message?.content || '';
+  console.log('[Gemini raw response]', text.slice(0, 500));
+  return text;
+}
+
+/* ============================================================
+   TOPIC EXTRACTION
+   ============================================================ */
+async function extractTopics() {
+  if (state.articles.length === 0) {
+    toast('No articles loaded. Pull data from GitHub first.', 'error');
+    return;
+  }
+  const btn = document.getElementById('extractBtn');
+  setLoading(btn, true, 'Analyzing articles…');
+
+  try {
+    // Prepare article summaries (max 25 articles)
+    const summaries = state.articles.slice(0, 25).map((a, i) =>
+      `[${i+1}] ${a.title||''} | ${a.url||''} | ${(a.snippet||a.summary||'').slice(0,80)}`
+    ).join('\n');
+
+    const systemPrompt =
+`You are a B2B tech content strategist for KAON Group, a Korean telecommunications equipment manufacturer specializing in broadband and video CPE (Customer Premises Equipment) for telecom operators worldwide.
+
+Your task: analyze these news articles and extract the best topics for KAON Group's official LinkedIn page.
+
+Selection criteria (rank topics by these, in order):
+1. Industry Trend Relevance — macro shifts affecting broadband/video CPE market
+2. Competitor Dynamics — what competitors or ecosystem players are doing and what it means for operators
+3. Technical Education Value — topics that position KAON as a thought leader
+4. Business Impact — clear ROI or strategic implications for telecom operators
+
+IMPORTANT: Return ONLY a valid JSON object. No markdown fences, no preamble, no commentary.
+Extract between 5 and 10 topics. Use exactly this format:
+{
+  "topics": [
+    {
+      "title": "Concise, engaging topic title (max 12 words)",
+      "sourceArticles": [
+        {"title": "Exact article title", "url": "Exact article URL"}
+      ],
+      "linkedInReason": "2-3 sentences: why this is valuable for KAON's LinkedIn audience (telecom operators, B2B buyers, network engineers, industry analysts).",
+      "postFormat": "carousel"
+    }
+  ]
+}
+
+postFormat rules:
+- "carousel"     — step-by-step processes, comparisons, top-N lists
+- "text"         — opinion pieces, quick insights, company news
+- "infographic"  — market data, statistics, technology diagrams`;
+
+    const userContent =
+`Analyze these ${state.articles.length} news articles and extract ${5}-${10} LinkedIn posting topics for KAON Group:\n\n${summaries}`;
+
+    const raw = await callGemini(systemPrompt, userContent + '\n\nReturn ONLY the JSON object with a topics array. No other text.', 6000);
+
+    // Strip markdown fences
+    let cleaned = raw.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+    // Extract JSON object or array
+    const firstCurly = cleaned.indexOf('{');
+    const lastCurly = cleaned.lastIndexOf('}');
+    const firstBracket = cleaned.indexOf('[');
+    const lastBracket = cleaned.lastIndexOf(']');
+    if (firstCurly !== -1 && lastCurly > firstCurly) {
+      cleaned = cleaned.slice(firstCurly, lastCurly + 1);
+    } else if (firstBracket !== -1 && lastBracket > firstBracket) {
+      cleaned = cleaned.slice(firstBracket, lastBracket + 1);
+    }
+    let parsed;
+    try {
+      const obj = JSON.parse(cleaned);
+      // Handle both {topics:[...]} and direct array
+      parsed = Array.isArray(obj) ? obj : (obj.topics || obj.data || Object.values(obj).find(v => Array.isArray(v)) || []);
+    } catch(e) { throw new Error('AI 응답을 JSON으로 파싱할 수 없습니다. 다시 시도해주세요.'); }
+
+    if (!Array.isArray(parsed) || parsed.length === 0) {
+      throw new Error('AI 응답이 비어있습니다. 다시 시도해주세요.');
+    }
+
+    state.topics = parsed.map((t, i) => ({
+      id:            `topic_${Date.now()}_${i}`,
+      title:         t.title || `Topic ${i + 1}`,
+      sourceArticles:Array.isArray(t.sourceArticles) ? t.sourceArticles : [],
+      linkedInReason:t.linkedInReason || '',
+      postFormat:    ['carousel', 'text', 'infographic'].includes(t.postFormat) ? t.postFormat : 'text',
+      createdAt:     new Date().toISOString()
+    }));
+
+    lsSet(SK.TOPICS, state.topics);
+    renderTopics();
+    renderTopicList();
+    updateKPIs();
+    updateStatusBanner();
+    toast(`✓ Extracted ${state.topics.length} LinkedIn topics`, 'success');
+  } catch(e) {
+    toast(`Topic extraction failed: ${e.message}`, 'error');
+  } finally {
+    setLoading(btn, false);
+  }
+}
+
+function clearTopics() {
+  if (!confirm('Clear all extracted topics? Schedule and posts will also be cleared.')) return;
+  state.topics = []; state.schedule = {}; state.posts = {};
+  state.selectedTopicId = null;
+  lsDel(SK.TOPICS); lsDel(SK.SCHEDULE); lsDel(SK.POSTS);
+  renderTopics(); renderTopicList(); renderCalendar(); renderDraftPanel(); updateKPIs(); updateStatusBanner();
+}
+
+/* ============================================================
+   TOPIC RENDERING (Tab 1)
+   ============================================================ */
+function renderTopics() {
+  const container  = document.getElementById('topicsContainer');
+  const countEl    = document.getElementById('topicCount');
+  const clearBtn   = document.getElementById('clearTopicsBtn');
+
+  countEl.textContent = `${state.topics.length} topic${state.topics.length !== 1 ? 's' : ''}`;
+  clearBtn.style.display = state.topics.length ? '' : 'none';
+
+  if (state.topics.length === 0) {
+    container.innerHTML = `<div class="empty-state">
+      <div class="empty-icon">💡</div>
+      <div class="empty-title">No topics yet</div>
+      <div class="empty-sub">
+        Pull news articles from GitHub (Settings → Pull now),<br>
+        then click <strong>Extract Topics with AI</strong> to generate LinkedIn post ideas.
+      </div>
+    </div>`;
+    return;
+  }
+
+  container.innerHTML = `<div class="topics-grid">${state.topics.map(buildTopicCard).join('')}</div>`;
+}
+
+function buildTopicCard(t, i) {
+  const fmtClass = { carousel: 'fmt-carousel', text: 'fmt-text', infographic: 'fmt-infographic' }[t.postFormat] || 'fmt-text';
+  const fmtLabel = t.postFormat ? t.postFormat.charAt(0).toUpperCase() + t.postFormat.slice(1) : 'Text';
+  const isSelected  = state.selectedTopicId === t.id;
+  const scheduled   = getScheduledDate(t.id);
+
+  const sources = (t.sourceArticles || []).slice(0, 3).map(a =>
+    `<a class="topic-source-link" href="${h(a.url || '#')}" target="_blank" rel="noopener" title="${h(a.title)}">${h(a.title || 'Article')}</a>`
+  ).join('');
+
+  return `
+<div class="topic-card${isSelected ? ' selected' : ''}" id="tc_${h(t.id)}">
+  <div class="topic-card-header">
+    <span class="topic-num">#${i + 1}</span>
+    <span class="topic-title">${h(t.title)}</span>
+  </div>
+  <div class="topic-reason">${h(t.linkedInReason)}</div>
+  ${sources ? `<div class="topic-sources">${sources}</div>` : ''}
+  <div class="topic-footer">
+    <span class="format-badge ${fmtClass}">${fmtLabel}</span>
+    ${scheduled ? `<span class="scheduled-badge">📅 ${fmtDate(scheduled)}</span>` : ''}
+    <div class="topic-actions">
+      <button class="btn-sm" onclick="togglePicker('${h(t.id)}')">📅 Schedule</button>
+      <button class="btn-sm${isSelected ? ' btn-active' : ''}" onclick="selectTopic('${h(t.id)}');switchTab('generator')">✍️ Post</button>
+    </div>
+  </div>
+  <div class="schedule-picker" id="picker_${h(t.id)}">
+    <input type="date" class="date-input" id="datein_${h(t.id)}" value="${scheduled || ''}">
+    <button class="btn-sm" onclick="setTopicDate('${h(t.id)}')">Set</button>
+    ${scheduled ? `<button class="btn-sm" style="color:var(--danger)" onclick="removeTopicDate('${h(t.id)}')">Remove</button>` : ''}
+  </div>
+</div>`;
+}
+
+function togglePicker(topicId) {
+  const el = document.getElementById(`picker_${topicId}`);
+  if (el) el.classList.toggle('open');
+}
+
+function setTopicDate(topicId) {
+  const input = document.getElementById(`datein_${topicId}`);
+  if (!input || !input.value) { toast('Select a date first', 'error'); return; }
+  removeTopicDate(topicId, true);
+  const dateKey = input.value;
+  if (!state.schedule[dateKey]) state.schedule[dateKey] = [];
+  if (!state.schedule[dateKey].includes(topicId)) state.schedule[dateKey].push(topicId);
+  lsSet(SK.SCHEDULE, state.schedule);
+  renderTopics();
+  renderCalendar();
+  toast(`Scheduled for ${fmtDate(dateKey)}`, 'success');
+}
+
+function removeTopicDate(topicId, silent = false) {
+  for (const d in state.schedule) {
+    const idx = state.schedule[d].indexOf(topicId);
+    if (idx !== -1) {
+      state.schedule[d].splice(idx, 1);
+      if (state.schedule[d].length === 0) delete state.schedule[d];
+    }
+  }
+  lsSet(SK.SCHEDULE, state.schedule);
+  if (!silent) { renderTopics(); renderCalendar(); }
+}
+
+function getScheduledDate(topicId) {
+  for (const d in state.schedule) {
+    if ((state.schedule[d] || []).includes(topicId)) return d;
+  }
+  return null;
+}
+
+/* ============================================================
+   AUTO SCHEDULE
+   ============================================================ */
+function autoSchedule() {
+  const unscheduled = state.topics.filter(t => !getScheduledDate(t.id));
+  if (unscheduled.length === 0) { toast('All topics are already scheduled', 'info'); return; }
+
+  const y = state.calYear, m = state.calMonth;
+  const daysInMonth = new Date(y, m + 1, 0).getDate();
+
+  // Collect Tue(2) and Thu(4) of the current calendar month
+  const slots = [];
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dow = new Date(y, m, d).getDay();
+    if (dow === 2 || dow === 4) {
+      slots.push(`${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`);
+    }
+  }
+
+  // Use only empty slots (not already occupied)
+  const available = slots.filter(s => !state.schedule[s] || state.schedule[s].length === 0);
+  let placed = 0;
+  for (const topic of unscheduled) {
+    if (placed >= available.length) break;
+    const key = available[placed++];
+    if (!state.schedule[key]) state.schedule[key] = [];
+    state.schedule[key].push(topic.id);
+  }
+
+  lsSet(SK.SCHEDULE, state.schedule);
+  renderTopics();
+  renderCalendar();
+
+  if (placed === 0) {
+    toast('No free Tue/Thu slots this month. Try changing the month first.', 'warning');
+  } else {
+    toast(`Scheduled ${placed} topic${placed !== 1 ? 's' : ''} on Tue & Thu`, 'success');
+  }
+}
+
+/* ============================================================
+   CALENDAR
+   ============================================================ */
+function changeMonth(delta) {
+  state.calMonth += delta;
+  if (state.calMonth > 11) { state.calMonth = 0; state.calYear++; }
+  if (state.calMonth < 0)  { state.calMonth = 11; state.calYear--; }
+  renderCalendar();
+}
+
+const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+function renderCalendar() {
+  const grid  = document.getElementById('calGrid');
+  const label = document.getElementById('calMonthLabel');
+  const y = state.calYear, m = state.calMonth;
+
+  label.textContent = `${MONTH_NAMES[m]} ${y}`;
+
+  const firstDow     = new Date(y, m, 1).getDay();
+  const daysInMonth  = new Date(y, m + 1, 0).getDate();
+  const prevMonthDays= new Date(y, m, 0).getDate();
+
+  const today = new Date();
+  const todayStr = dateStr(today.getFullYear(), today.getMonth() + 1, today.getDate());
+
+  let html = '';
+
+  // Prev month padding
+  for (let i = firstDow - 1; i >= 0; i--) {
+    html += `<div class="cal-cell other-month"><span class="cal-date" style="opacity:.35">${prevMonthDays - i}</span></div>`;
+  }
+
+  // Current month
+  for (let d = 1; d <= daysInMonth; d++) {
+    const key       = dateStr(y, m + 1, d);
+    const isToday   = key === todayStr;
+    const topicIds  = state.schedule[key] || [];
+
+    const chips = topicIds.map(tid => {
+      const topic = state.topics.find(t => t.id === tid);
+      if (!topic) return '';
+      const short = topic.title.length > 45 ? topic.title.slice(0, 43) + '…' : topic.title;
+      return `<div class="cal-chip"
+        draggable="true"
+        ondragstart="onChipDragStart(event,'${tid}','${key}')"
+        ondragend="onChipDragEnd(event)"
+        onclick="selectTopic('${tid}');switchTab('generator')"
+        title="${h(topic.title)}">
+        <span class="cal-chip-title">${h(short)}</span>
+        <span class="cal-chip-del" onclick="event.stopPropagation();removeTopicDate('${tid}')" title="Unschedule">✕</span>
+      </div>`;
+    }).join('');
+
+    html += `<div class="cal-cell${isToday ? ' is-today' : ''}"
+      id="cell_${key}"
+      ondragover="onCellDragOver(event)"
+      ondragleave="onCellDragLeave(event)"
+      ondrop="onCellDrop(event,'${key}')">
+      <span class="cal-date">${d}</span>
+      <div class="cal-chips">${chips}</div>
+    </div>`;
+  }
+
+  // Fill remaining cells
+  const totalCells = Math.ceil((firstDow + daysInMonth) / 7) * 7;
+  let nd = 1;
+  for (let i = firstDow + daysInMonth; i < totalCells; i++) {
+    html += `<div class="cal-cell other-month"><span class="cal-date" style="opacity:.35">${nd++}</span></div>`;
+  }
+
+  grid.innerHTML = html;
+}
+
+function dateStr(y, m, d) {
+  return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+}
+
+/* Calendar Drag & Drop */
+function onChipDragStart(e, topicId, fromDate) {
+  state.dragTopicId  = topicId;
+  state.dragFromDate = fromDate;
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', topicId);
+  setTimeout(() => { if (e.target) e.target.style.opacity = '0.4'; }, 0);
+}
+
+function onChipDragEnd(e) {
+  if (e.target) e.target.style.opacity = '';
+  document.querySelectorAll('.cal-cell.drag-over').forEach(el => el.classList.remove('drag-over'));
+}
+
+function onCellDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  e.currentTarget.classList.add('drag-over');
+}
+
+function onCellDragLeave(e) {
+  e.currentTarget.classList.remove('drag-over');
+}
+
+function onCellDrop(e, toDate) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  const topicId  = state.dragTopicId;
+  const fromDate = state.dragFromDate;
+  if (!topicId || fromDate === toDate) { state.dragTopicId = null; state.dragFromDate = null; return; }
+
+  // Remove from old
+  if (fromDate && state.schedule[fromDate]) {
+    state.schedule[fromDate] = state.schedule[fromDate].filter(id => id !== topicId);
+    if (state.schedule[fromDate].length === 0) delete state.schedule[fromDate];
+  }
+  // Add to new
+  if (!state.schedule[toDate]) state.schedule[toDate] = [];
+  if (!state.schedule[toDate].includes(topicId)) state.schedule[toDate].push(topicId);
+
+  lsSet(SK.SCHEDULE, state.schedule);
+  renderTopics();
+  renderCalendar();
+  state.dragTopicId = null;
+  state.dragFromDate = null;
+}
+
+/* ============================================================
+   CSV EXPORT
+   ============================================================ */
+function exportCSV() {
+  const rows = [['Date', 'Day', 'Topic', 'Format', 'LinkedIn Reason', 'Source Articles', 'Post Generated']];
+  const sorted = Object.keys(state.schedule).sort();
+  const dows = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+  for (const date of sorted) {
+    for (const tid of (state.schedule[date] || [])) {
+      const t = state.topics.find(t => t.id === tid);
+      if (!t) continue;
+      const dow     = dows[new Date(date).getDay()];
+      const sources = (t.sourceArticles || []).map(a => a.title).join(' | ');
+      const hasPosts= (state.posts[tid] || []).length > 0 ? 'Yes' : 'No';
+      rows.push([date, dow, t.title, t.postFormat || 'text', t.linkedInReason || '', sources, hasPosts]);
+    }
+  }
+
+  if (rows.length === 1) { toast('No scheduled topics to export', 'warning'); return; }
+
+  const csv  = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\r\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url;
+  a.download = `kaon-linkedin-${state.calYear}-${String(state.calMonth + 1).padStart(2, '0')}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('CSV exported', 'success');
+}
+
+/* ============================================================
+   POST GENERATOR — TOPIC LIST (Tab 2)
+   ============================================================ */
+function renderTopicList() {
+  const container = document.getElementById('topicListContainer');
+  if (state.topics.length === 0) {
+    container.innerHTML = `<div class="empty-state" style="padding:24px 12px">
+      <div class="empty-icon" style="font-size:28px">💡</div>
+      <div class="empty-sub" style="font-size:11px">Extract topics in the<br>Content Planner first</div>
+    </div>`;
+    return;
+  }
+
+  const fmtBg  = { carousel: 'rgba(37,99,235,.1)', text: 'rgba(26,158,92,.1)', infographic: 'rgba(217,119,6,.1)' };
+  const fmtClr = { carousel: 'var(--accent)', text: 'var(--success)', infographic: 'var(--warning)' };
+
+  container.innerHTML = state.topics.map(t => {
+    const isActive = t.id === state.selectedTopicId;
+    const bg  = fmtBg[t.postFormat]  || fmtBg.text;
+    const clr = fmtClr[t.postFormat] || fmtClr.text;
+    const sched = getScheduledDate(t.id);
+    return `<div class="topic-list-item${isActive ? ' active' : ''}" onclick="selectTopic('${h(t.id)}')">
+      <div class="tli-title">${h(t.title)}</div>
+      <div class="tli-meta">
+        <span class="tli-fmt" style="background:${bg};color:${clr}">${(t.postFormat || 'text').toUpperCase()}</span>
+        ${sched ? `<span style="font-size:10px;color:var(--success);font-family:var(--font-mono)">📅 ${fmtDate(sched)}</span>` : ''}
+        ${(state.posts[t.id] || []).length ? `<span style="font-size:10px;color:var(--text-muted);font-family:var(--font-mono)">✓ ${(state.posts[t.id] || []).length} draft${(state.posts[t.id] || []).length > 1 ? 's' : ''}</span>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function selectTopic(topicId) {
+  state.selectedTopicId = topicId;
+  renderTopics();
+  renderTopicList();
+  renderDraftPanel();
+}
+
+/* ============================================================
+   POST GENERATOR — DRAFT PANEL (Tab 2)
+   ============================================================ */
+function renderDraftPanel() {
+  const topic    = state.topics.find(t => t.id === state.selectedTopicId);
+  const emptyEl  = document.getElementById('draftEmpty');
+  const infoEl   = document.getElementById('draftTopicInfo');
+  const actEl    = document.getElementById('draftActions');
+  const versEl   = document.getElementById('versionsLabel');
+  const genBtn   = document.getElementById('genVersionBtn');
+
+  if (!topic) {
+    emptyEl.style.display  = '';
+    infoEl.style.display   = 'none';
+    actEl.style.display    = 'none';
+    document.getElementById('postVersionsContainer').innerHTML = '';
+    return;
+  }
+
+  emptyEl.style.display = 'none';
+  infoEl.style.display  = '';
+  actEl.style.display   = '';
+
+  // Fill topic info
+  document.getElementById('dtiTitle').textContent = topic.title;
+  const fmtEl  = document.getElementById('dtiFormat');
+  const fmtMap = { carousel: 'fmt-carousel', text: 'fmt-text', infographic: 'fmt-infographic' };
+  fmtEl.className   = `format-badge ${fmtMap[topic.postFormat] || 'fmt-text'}`;
+  fmtEl.textContent = (topic.postFormat || 'text').charAt(0).toUpperCase() + (topic.postFormat || 'text').slice(1);
+  document.getElementById('dtiReason').textContent = topic.linkedInReason || '';
+
+  const srcEl = document.getElementById('dtiSources');
+  srcEl.innerHTML = (topic.sourceArticles || []).map(a =>
+    `<a class="dti-source-link" href="${h(a.url || '#')}" target="_blank" rel="noopener">📰 ${h(a.title || 'Article')}</a>`
+  ).join('');
+
+  // Versions control
+  const posts = state.posts[topic.id] || [];
+  const genVersionBtn = document.getElementById('genVersionBtn');
+  genVersionBtn.style.display = posts.length > 0 && posts.length < 3 ? '' : 'none';
+  versEl.textContent = posts.length > 0 ? `${posts.length}/3 version${posts.length !== 1 ? 's' : ''}` : '';
+
+  renderPostVersions(topic.id);
+}
+
+/* ============================================================
+   POST GENERATION
+   ============================================================ */
+async function generatePost(addVersion = false) {
+  const topic = state.topics.find(t => t.id === state.selectedTopicId);
+  if (!topic) { toast('Select a topic first', 'error'); return; }
+
+  const existing = state.posts[topic.id] || [];
+  if (addVersion && existing.length >= 3) { toast('Maximum 3 versions reached', 'info'); return; }
+
+  const btn = document.getElementById('genPostBtn');
+  setLoading(btn, true, 'Generating…');
+
+  try {
+    const systemPrompt =
+`You are the official LinkedIn content writer for KAON Group, a Korean B2B telecommunications equipment manufacturer (broadband & video CPE for telecom operators).
+
+Tone: Professional but conversational English. Authoritative, never corporate-stiff.
+Audience: Telecom operators, B2B procurement managers, network engineers, industry analysts.
+
+Required structure (write in this exact order):
+1. HOOK — 1 bold opening sentence. A question, striking stat, or contrarian statement. NO generic openers like "In today's fast-paced world".
+2. KEY INSIGHTS — 3-5 bullet points (use • symbol), each 1-2 sentences, covering the core substance.
+3. BUSINESS IMPLICATIONS — 2 sentences explaining what this means for telecom operators or KAON's customers.
+4. CTA — 1 sentence call-to-action (e.g. "What's your take?", "Drop your thoughts below.", "Follow KAON Group for more insights.")
+5. HASHTAGS — 3-5 hashtags on the final line (e.g. #Broadband #Telecom #CPE #FiberOptics #NetworkInfrastructure)
+
+Target length: 150-250 words total.
+When referencing KAON Group's perspective, use "we" or "at KAON Group".
+Do NOT add any preamble, labels, or section headers — write the post directly.`;
+
+    const versionHint = addVersion && existing.length > 0
+      ? `\n\nNote: This is version ${existing.length + 1}. Use a distinctly different hook and angle from a typical first draft on this topic.`
+      : '';
+
+    const sources = (topic.sourceArticles || []).map(a =>
+      `• ${a.title}${a.url ? ` (${a.url})` : ''}`
+    ).join('\n');
+
+    const userContent =
+`Write a LinkedIn post for KAON Group about this topic:
+
+TOPIC: ${topic.title}
+FORMAT: ${topic.postFormat || 'text'}
+WHY THIS TOPIC: ${topic.linkedInReason}
+
+REFERENCE ARTICLES:
+${sources || '(no specific articles)'}${versionHint}`;
+
+    const postText = await callGemini(systemPrompt, userContent, 2000);
+
+    if (!state.posts[topic.id]) state.posts[topic.id] = [];
+    state.posts[topic.id].push(postText.trim());
+    lsSet(SK.POSTS, state.posts);
+
+    updateKPIs();
+    updateStatusBanner();
+    renderDraftPanel();
+    renderTopicList();
+    toast('✓ Post draft generated', 'success');
+  } catch(e) {
+    toast(`Generation failed: ${e.message}`, 'error');
+  } finally {
+    setLoading(btn, false);
+  }
+}
+
+function renderPostVersions(topicId) {
+  const container = document.getElementById('postVersionsContainer');
+  const posts = state.posts[topicId] || [];
+
+  if (posts.length === 0) {
+    container.innerHTML = '';
+    return;
+  }
+
+  // Width per version: 1→100%, 2→50%, 3→33%
+  const widths = ['', 'calc(100%)', 'calc(50% - 6px)', 'calc(33.33% - 8px)'];
+  const fw = widths[posts.length] || 'calc(33.33% - 8px)';
+  const minW = posts.length > 1 ? '320px' : 'auto';
+
+  container.innerHTML = posts.map((post, i) => {
+    const words = post.trim().split(/\s+/).filter(Boolean).length;
+    return `<div class="post-version-card" style="flex:0 0 ${fw};min-width:${minW}">
+      <div class="post-version-header">
+        <span class="version-label">VERSION ${i + 1}</span>
+        <div class="version-actions">
+          <button class="btn-sm" onclick="copyVersion('${h(topicId)}',${i})" title="Copy to clipboard">📋 Copy</button>
+          <button class="btn-sm" id="regenBtn_${h(topicId)}_${i}" onclick="regenVersion('${h(topicId)}',${i})" title="Regenerate this version">🔄 Regen</button>
+          <button class="btn-sm" style="color:var(--danger);border-color:rgba(224,58,58,.25)" onclick="deleteVersion('${h(topicId)}',${i})" title="Delete this version">✕</button>
+        </div>
+      </div>
+      <textarea class="post-textarea" id="postTA_${h(topicId)}_${i}"
+        oninput="onPostEdit('${h(topicId)}',${i},this.value);updateCharCount('${h(topicId)}',${i},this.value)">${h(post)}</textarea>
+      <div class="char-count" id="charCount_${h(topicId)}_${i}">${words} words</div>
+    </div>`;
+  }).join('');
+}
+
+function updateCharCount(topicId, idx, value) {
+  const el = document.getElementById(`charCount_${topicId}_${idx}`);
+  if (!el) return;
+  const words = value.trim().split(/\s+/).filter(Boolean).length;
+  el.textContent = `${words} words`;
+  el.style.color = words < 150 ? 'var(--warning)' : words > 250 ? 'var(--danger)' : 'var(--success)';
+}
+
+function onPostEdit(topicId, idx, value) {
+  if (!state.posts[topicId]) return;
+  state.posts[topicId][idx] = value;
+  lsSet(SK.POSTS, state.posts);
+}
+
+function copyVersion(topicId, idx) {
+  const ta = document.getElementById(`postTA_${topicId}_${idx}`);
+  if (!ta) return;
+  navigator.clipboard.writeText(ta.value)
+    .then(() => toast('Copied to clipboard!', 'success'))
+    .catch(() => { ta.select(); document.execCommand('copy'); toast('Copied', 'success'); });
+}
+
+async function regenVersion(topicId, idx) {
+  const topic = state.topics.find(t => t.id === topicId);
+  if (!topic) return;
+
+  const regenBtn = document.getElementById(`regenBtn_${topicId}_${idx}`);
+  const origHtml = regenBtn ? regenBtn.innerHTML : '';
+  if (regenBtn) { regenBtn.disabled = true; regenBtn.innerHTML = '<span class="spinner spinner-dark"></span>'; }
+
+  try {
+    const systemPrompt =
+`You are the official LinkedIn content writer for KAON Group (B2B telecom equipment). Write in professional but conversational English.
+Structure: Hook(1 line) → Key Insights with bullets (• symbol, 3-5 lines) → Business Implications (2 sentences) → CTA (1 sentence) → 3-5 Hashtags.
+Length: 150-250 words. Do NOT add labels or section headers.`;
+
+    const sources = (topic.sourceArticles || []).map(a => `• ${a.title}`).join('\n');
+    const userContent = `Write a fresh LinkedIn post for KAON Group about: ${topic.title}\n\nSource context:\n${sources}\n\nWhy relevant: ${topic.linkedInReason}\n\nUse a completely different hook and angle than a typical post on this topic.`;
+
+    const postText = await callGemini(systemPrompt, userContent, 2000);
+    state.posts[topicId][idx] = postText.trim();
+    lsSet(SK.POSTS, state.posts);
+
+    const ta = document.getElementById(`postTA_${topicId}_${idx}`);
+    if (ta) { ta.value = postText.trim(); updateCharCount(topicId, idx, postText.trim()); }
+    toast('Version regenerated', 'success');
+  } catch(e) {
+    toast(`Regen failed: ${e.message}`, 'error');
+  } finally {
+    if (regenBtn) { regenBtn.disabled = false; regenBtn.innerHTML = origHtml; }
+  }
+}
+
+function deleteVersion(topicId, idx) {
+  if (!state.posts[topicId]) return;
+  if (!confirm(`Delete Version ${idx + 1}?`)) return;
+  state.posts[topicId].splice(idx, 1);
+  if (state.posts[topicId].length === 0) delete state.posts[topicId];
+  lsSet(SK.POSTS, state.posts);
+  updateKPIs();
+  updateStatusBanner();
+  renderDraftPanel();
+  renderTopicList();
+}
+
+/* ============================================================
+   TAB SWITCHING
+   ============================================================ */
+function switchTab(tabId) {
+  document.querySelectorAll('.tab-nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tabBtn-' + tabId).classList.add('active');
+  document.getElementById('tab-planner').style.display   = tabId === 'planner'   ? '' : 'none';
+  document.getElementById('tab-generator').style.display = tabId === 'generator' ? '' : 'none';
+  if (tabId === 'generator') renderTopicList();
+}
+
+/* ============================================================
+   KPI & COUNT
+   ============================================================ */
+function countTotalPosts() {
+  return Object.values(state.posts).reduce((s, v) => s + (Array.isArray(v) ? v.length : 0), 0);
+}
+
+function updateKPIs() {
+  const a = state.articles.length;
+  const t = state.topics.length;
+  const p = countTotalPosts();
+  ['kpiArticles','hkpiArticles'].forEach(id => { const el=document.getElementById(id); if(el) el.textContent=a; });
+  ['kpiTopics',  'hkpiTopics'  ].forEach(id => { const el=document.getElementById(id); if(el) el.textContent=t; });
+  ['kpiPosts',   'hkpiPosts'   ].forEach(id => { const el=document.getElementById(id); if(el) el.textContent=p; });
+}
+
+/* ============================================================
+   RENDER ALL
+   ============================================================ */
+function renderAll() {
+  renderTopics();
+  renderTopicList();
+  renderCalendar();
+  renderDraftPanel();
+  updateKPIs();
+  updateStatusBanner();
+}
+
+/* ============================================================
+   UTILITIES
+   ============================================================ */
+function h(str) {
+  return String(str || '')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function fmtDate(dateStr) {
+  if (!dateStr) return '';
+  try {
+    const d = new Date(dateStr + (dateStr.length === 10 ? 'T12:00:00' : ''));
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  } catch { return dateStr; }
+}
+
+function setLoading(btn, loading, label) {
+  if (!btn) return;
+  if (loading) {
+    if (!btn.dataset.origHtml) btn.dataset.origHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spinner"></span>${label ? ' ' + label : ''}`;
+  } else {
+    btn.disabled = false;
+    btn.innerHTML = btn.dataset.origHtml || label || '';
+    delete btn.dataset.origHtml;
+  }
+}
+
+function toast(msg, type = 'info', duration = 3500) {
+  const icons = { success: '✓', error: '✕', info: 'ℹ', warning: '⚠' };
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<span style="flex-shrink:0">${icons[type] || '•'}</span><span>${h(msg)}</span>`;
+  document.getElementById('toastContainer').appendChild(el);
+  setTimeout(() => {
+    el.style.transition = 'opacity .3s,transform .3s';
+    el.style.opacity = '0';
+    el.style.transform = 'translateX(20px)';
+    setTimeout(() => el.remove(), 300);
+  }, duration);
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+function init() {
+  // Restore persisted state
+  state.articles = lsGet(SK.ARTICLES, []);
+  state.topics   = lsGet(SK.TOPICS,   []);
+  state.schedule = lsGet(SK.SCHEDULE, {});
+  state.posts    = lsGet(SK.POSTS,    {});
+
+  initSettingsUI();
+  renderAll();
+
+  // Auto-open settings if nothing is configured
+  if (!lsStr(SK.GH_REPO) && !lsStr(SK.GROQ_KEY)) {
+    setTimeout(() => {
+      toggleSettings();
+      toast('GitHub 레포와 Groq API 키를 설정해주세요.', 'info', 6000);
+    }, 400);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', init);
+
+// Keyboard shortcut: Esc closes settings
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && settingsOpen) toggleSettings(); });
+</script>
+</body>
+</html>
